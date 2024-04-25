@@ -2,7 +2,6 @@ package ru.practicum.shareit.item.repository;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
-import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.model.Item;
 
 import java.util.ArrayList;
@@ -26,18 +25,13 @@ public class InMemoryItemRepository implements ItemRepository {
 
     @Override
     public Item update(Long userId, Long itemId, Item item) {
-        item.setId(itemId);
         items.put(itemId, item);
         return item;
     }
 
     @Override
     public Item findItemById(Long itemId) {
-        Item item = items.get(itemId);
-        if (item == null) {
-            throw new NotFoundException("Item with id = " + itemId + " not found");
-        }
-        return item;
+        return items.get(itemId);
     }
 
     @Override
