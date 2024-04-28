@@ -83,8 +83,10 @@ public class UserServiceImpl implements UserService {
                 .filter(savedUser -> savedUser.getEmail().equalsIgnoreCase(user.getEmail()))
                 .findFirst();
 
-        if (foundUser.isPresent() && !Objects.equals(user.getId(), foundUser.get().getId())) {
-            throw new AlreadyExistsException("User already exists");
-        }
+        foundUser.ifPresent(existingUser -> {
+            if (!Objects.equals(user.getId(), existingUser.getId())) {
+                throw new AlreadyExistsException("User already exists");
+            }
+        });
     }
 }
