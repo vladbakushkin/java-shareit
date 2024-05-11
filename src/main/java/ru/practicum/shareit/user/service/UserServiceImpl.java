@@ -13,7 +13,6 @@ import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,8 +27,9 @@ public class UserServiceImpl implements UserService {
     public NewUserDto saveUser(NewUserDto newUserDto) {
         User user = newUserDtoMapper.toUser(newUserDto);
 
-        checkUserEmailInStorage(user);
-
+        if (userRepository.existsByEmail(user.getEmail())) {
+            throw new AlreadyExistsException("User already exists");
+        }
         User savedUser = userRepository.save(user);
 
         return newUserDtoMapper.toDto(savedUser);
@@ -38,36 +38,35 @@ public class UserServiceImpl implements UserService {
     @Override
     public UpdateUserDto updateUser(Long userId, UpdateUserDto updateUserDto) {
         User user = updateUserDtoMapper.toUser(updateUserDto);
-        user.setId(userId);
 
-        User userToUpdate = userRepository.findUserById(userId);
-        if (userToUpdate == null) {
-            throw new NotFoundException("User with id = " + userId + " not found");
-        }
+        User userToUpdate = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User with id = " + userId + " not found"));
 
         if (user.getName() != null) {
             userToUpdate.setName(user.getName());
         }
+
         if (user.getEmail() != null) {
-            checkUserEmailInStorage(user);
+            if (userRepository.existsByEmail(user.getEmail()) && !Objects.equals(userToUpdate.getId(), userId)) {
+                throw new AlreadyExistsException("User already exists");
+            }
             userToUpdate.setEmail(user.getEmail());
         }
 
-        User updatedUser = userRepository.update(userId, userToUpdate);
+        User updatedUser = userRepository.save(userToUpdate);
         return updateUserDtoMapper.toDto(updatedUser);
     }
 
     @Override
     public NewUserDto getUser(Long userId) {
-        User user = userRepository.findUserById(userId);
-        if (user == null) {
-            throw new NotFoundException("User with id = " + userId + " not found");
-        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User with id = " + userId + " not found"));
         return newUserDtoMapper.toDto(user);
     }
 
     @Override
     public List<NewUserDto> getAllUsers() {
+        // возможно стоит добавить пагинацию
         return userRepository.findAll().stream()
                 .map(newUserDtoMapper::toDto)
                 .collect(Collectors.toList());
@@ -75,18 +74,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteUser(Long id) {
-        userRepository.deleteUserById(id);
-    }
-
-    private void checkUserEmailInStorage(User user) {
-        Optional<User> foundUser = userRepository.findAll().stream()
-                .filter(savedUser -> savedUser.getEmail().equalsIgnoreCase(user.getEmail()))
-                .findFirst();
-
-        foundUser.ifPresent(existingUser -> {
-            if (!Objects.equals(user.getId(), existingUser.getId())) {
-                throw new AlreadyExistsException("User already exists");
-            }
-        });
+        userRepository.deleteById(id);
     }
 }
