@@ -14,6 +14,7 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -57,8 +58,8 @@ class UserServiceImplTest {
     void updateUser_Valid_ReturnsUser() {
         // given
         UpdateUserDto userToUpdate = createUpdateUserDto();
-        when(userRepository.update(any(Long.class), any(User.class))).thenReturn(updatedUser);
-        when(userRepository.findUserById(any(Long.class))).thenReturn(updatedUser);
+        when(userRepository.save(any(User.class))).thenReturn(updatedUser);
+        when(userRepository.findById(any(Long.class))).thenReturn(Optional.ofNullable(updatedUser));
 
         // when
         UpdateUserDto updatedUser = userService.updateUser(userToUpdate.getId(), userToUpdate);
@@ -73,7 +74,7 @@ class UserServiceImplTest {
     void getUser_ReturnsUser() {
         // given
         NewUserDto userToGet = createNewUserDto();
-        when(userRepository.findUserById(any(Long.class))).thenReturn(savedUser);
+        when(userRepository.findById(any(Long.class))).thenReturn(Optional.ofNullable(savedUser));
 
         // when
         NewUserDto user = userService.getUser(1L);
@@ -107,13 +108,13 @@ class UserServiceImplTest {
     @Test
     void deleteUser() {
         // given
-        doNothing().when(userRepository).deleteUserById(any(Long.class));
+        doNothing().when(userRepository).deleteById(any(Long.class));
 
         // when
         userService.deleteUser(1L);
 
         // then
-        verify(userRepository, times(1)).deleteUserById(any(Long.class));
+        verify(userRepository, times(1)).deleteById(any(Long.class));
     }
 
     private NewUserDto createNewUserDto() {

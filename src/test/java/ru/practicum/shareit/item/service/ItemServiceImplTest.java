@@ -10,12 +10,11 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.UpdateItemDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
-import ru.practicum.shareit.user.dto.NewUserDto;
-import ru.practicum.shareit.user.dto.NewUserDtoMapper;
 import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.user.service.UserService;
+import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -29,26 +28,28 @@ class ItemServiceImplTest {
     private ItemRepository itemRepository;
 
     @Mock
-    private UserService userService;
+    private UserRepository userRepository;
 
     @InjectMocks
     private ItemServiceImpl itemService;
 
     Item addedItem;
     Item updatedItem;
+    User user;
 
     @BeforeEach
     void setUp() {
-        addedItem = new Item(1L, "Item", "Description", 1L, true);
-        updatedItem = new Item(1L, "Updated Item", "Updated Description", 1L, false);
+        user = new User(1L, "user@email.com", "username");
+        addedItem = new Item(1L, "Item", "Description", user, true);
+        updatedItem = new Item(1L, "Updated Item", "Updated Description", user, false);
     }
 
     @Test
     void addItem_Valid_ReturnItem() {
         // given
         ItemDto itemToAdd = createItemDto();
-        when(itemRepository.save(any(Long.class), any(Item.class))).thenReturn(addedItem);
-        when(userService.getUser(any(Long.class))).thenReturn(createNewUserDto());
+        when(itemRepository.save(any(Item.class))).thenReturn(addedItem);
+        when(userRepository.findById(any(Long.class))).thenReturn(Optional.ofNullable(user));
 
         // when
         ItemDto addedItem = itemService.addItem(1L, itemToAdd);
@@ -64,9 +65,9 @@ class ItemServiceImplTest {
     void updateItem_Valid_ReturnItem() {
         // given
         UpdateItemDto itemToUpdate = createUpdateItemDto();
-        when(itemRepository.update(any(Long.class), any(Long.class), any(Item.class))).thenReturn(updatedItem);
-        when(userService.getUser(any(Long.class))).thenReturn(createNewUserDto());
-        when(itemRepository.findItemById(any(Long.class))).thenReturn(updatedItem);
+        when(itemRepository.save(any(Item.class))).thenReturn(updatedItem);
+        when(userRepository.findById(any(Long.class))).thenReturn(Optional.ofNullable(user));
+        when(itemRepository.findById(any(Long.class))).thenReturn(Optional.ofNullable(updatedItem));
 
         // when
         UpdateItemDto updatedItem = itemService.updateItem(1L, 1L, itemToUpdate);
@@ -83,7 +84,7 @@ class ItemServiceImplTest {
     void getItem_Valid_ReturnItem() {
         // given
         ItemDto itemToGet = createItemDto();
-        when(itemRepository.findItemById(any(Long.class))).thenReturn(addedItem);
+        when(itemRepository.findById(any(Long.class))).thenReturn(Optional.ofNullable(addedItem));
 
         // when
         ItemDto addedItem = itemService.getItem(1L);
@@ -100,7 +101,7 @@ class ItemServiceImplTest {
         // given
         ItemDto itemToGet1 = createItemDto();
         UpdateItemDto itemToGet2 = createUpdateItemDto();
-        when(itemRepository.findAllItemsByUserId(any(Long.class))).thenReturn(List.of(addedItem, updatedItem));
+        when(itemRepository.findAllByUserId(any(Long.class))).thenReturn(List.of(addedItem, updatedItem));
 
         // when
         List<ItemDto> items = itemService.getAllItemsByOwner(1L);
@@ -147,14 +148,5 @@ class ItemServiceImplTest {
                 .description("Updated Description")
                 .available(false)
                 .build();
-    }
-
-    private NewUserDto createNewUserDto() {
-        NewUserDtoMapper newUserDtoMapper = new NewUserDtoMapper();
-        User user = new User();
-        user.setId(1L);
-        user.setName("User");
-        user.setEmail("user@email.com");
-        return newUserDtoMapper.toDto(user);
     }
 }
