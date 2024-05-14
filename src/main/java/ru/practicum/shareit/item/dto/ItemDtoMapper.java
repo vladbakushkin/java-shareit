@@ -15,6 +15,15 @@ public class ItemDtoMapper {
                 .build();
     }
 
+    public ItemListingDto toItemListingDto(Item item) {
+        return ItemListingDto.builder()
+                .id(item.getId())
+                .name(item.getName())
+                .description(item.getDescription())
+                .available(item.getAvailable())
+                .build();
+    }
+
     public Item toItem(ItemDto itemDto) {
         return Item.builder()
                 .name(itemDto.getName())

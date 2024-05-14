@@ -9,6 +9,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemListingDto;
 import ru.practicum.shareit.item.dto.UpdateItemDto;
 import ru.practicum.shareit.item.service.ItemService;
 
@@ -77,15 +78,16 @@ class ItemControllerTest {
     @Test
     void getItem() throws Exception {
         // given
-        ItemDto itemDto = createItemDto();
+        ItemListingDto itemDto = createItemListingDto();
 
         // when
-        when(itemService.getItem(any(Long.class))).thenReturn(itemDto);
+        when(itemService.getItem(any(Long.class), any(Long.class))).thenReturn(itemDto);
 
         // then
         mockMvc.perform(
                         get("/items/1")
-                                .contentType(MediaType.APPLICATION_JSON))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header("X-Sharer-User-Id", 1))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Item"))
                 .andExpect(jsonPath("$.description").value("Description"))
@@ -95,8 +97,8 @@ class ItemControllerTest {
     @Test
     void getAllItemsByOwner() throws Exception {
         // given
-        ItemDto itemDto1 = createItemDto();
-        ItemDto itemDto2 = createItemDto();
+        ItemListingDto itemDto1 = createItemListingDto();
+        ItemListingDto itemDto2 = createItemListingDto();
         itemDto2.setName("Item2");
         itemDto2.setDescription("Description2");
         itemDto2.setAvailable(false);
@@ -159,6 +161,15 @@ class ItemControllerTest {
                 .name("Updated Item")
                 .description("Updated Description")
                 .available(false)
+                .build();
+    }
+
+    private ItemListingDto createItemListingDto() {
+        return ItemListingDto.builder()
+                .id(1L)
+                .name("Item")
+                .description("Description")
+                .available(true)
                 .build();
     }
 }

@@ -6,7 +6,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemListingDto;
 import ru.practicum.shareit.item.dto.UpdateItemDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
@@ -29,6 +31,9 @@ class ItemServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private BookingRepository bookingRepository;
 
     @InjectMocks
     private ItemServiceImpl itemService;
@@ -83,11 +88,11 @@ class ItemServiceImplTest {
     @Test
     void getItem_Valid_ReturnItem() {
         // given
-        ItemDto itemToGet = createItemDto();
+        ItemListingDto itemToGet = createItemListingDto();
         when(itemRepository.findById(any(Long.class))).thenReturn(Optional.ofNullable(addedItem));
 
         // when
-        ItemDto addedItem = itemService.getItem(1L);
+        ItemListingDto addedItem = itemService.getItem(1L, 1L);
 
         // then
         assertNotNull(addedItem);
@@ -99,12 +104,12 @@ class ItemServiceImplTest {
     @Test
     void getAllItemsByOwner_Valid_ReturnItems() {
         // given
-        ItemDto itemToGet1 = createItemDto();
-        UpdateItemDto itemToGet2 = createUpdateItemDto();
-        when(itemRepository.findAllByUserId(any(Long.class))).thenReturn(List.of(addedItem, updatedItem));
+        ItemListingDto itemToGet1 = createItemListingDto();
+        ItemListingDto itemToGet2 = createItemListingDto();
+        when(itemRepository.findAllByUserId(any(Long.class))).thenReturn(List.of(addedItem, addedItem));
 
         // when
-        List<ItemDto> items = itemService.getAllItemsByOwner(1L);
+        List<ItemListingDto> items = itemService.getAllItemsByOwner(1L);
 
         // then
         assertNotNull(items);
@@ -147,6 +152,15 @@ class ItemServiceImplTest {
                 .name("Updated Item")
                 .description("Updated Description")
                 .available(false)
+                .build();
+    }
+
+    private ItemListingDto createItemListingDto() {
+        return ItemListingDto.builder()
+                .id(1L)
+                .name("Item")
+                .description("Description")
+                .available(true)
                 .build();
     }
 }

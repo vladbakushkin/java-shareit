@@ -12,6 +12,8 @@ import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exception.BadRequestException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.UnknownStateException;
+import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
@@ -25,13 +27,22 @@ import java.util.stream.Collectors;
 @Slf4j
 public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
+    private final ItemRepository itemRepository;
 
     private final BookingDtoMapper bookingDtoMapper;
     private final UserRepository userRepository;
 
     @Override
     public BookingResponseDto addBooking(Long userId, BookingRequestDto bookingRequestDto) {
-        Booking booking = bookingDtoMapper.toBooking(userId, bookingRequestDto);
+        Booking booking = bookingDtoMapper.toBooking(bookingRequestDto);
+
+        Item item = itemRepository.findById(bookingRequestDto.getItemId())
+                .orElseThrow(() -> new NotFoundException("Item with id = " + bookingRequestDto.getItemId() + " not found"));
+        booking.setItem(item);
+
+        User booker = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User with id = " + userId + " not found"));
+        booking.setBooker(booker);
 
         if (Objects.equals(userId, booking.getItem().getUser().getId())) {
             throw new NotFoundException("Unable to book your item");
