@@ -42,7 +42,7 @@ public class ErrorHandler {
 
     @ExceptionHandler(BadRequestException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleUnavailableException(final BadRequestException e) {
+    public ErrorResponse handleBadRequestException(final BadRequestException e) {
         return new ErrorResponse(
                 400,
                 "Bad Request",
