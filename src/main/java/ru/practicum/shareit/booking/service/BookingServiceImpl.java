@@ -98,24 +98,25 @@ public class BookingServiceImpl implements BookingService {
                 .orElseThrow(() -> new NotFoundException("User with id = " + userId + " not found"));
 
         List<Booking> bookingsForUser;
+        LocalDateTime now = LocalDateTime.now();
         switch (state) {
             case "ALL":
                 bookingsForUser = bookingRepository.findAllByBookerIdOrderByStartDesc(booker.getId());
                 break;
             case "CURRENT":
-                // где старт тайм < текущего времени
+                // где старт тайм < текущего времени && энд тайм > текущего времени
                 bookingsForUser = bookingRepository
-                        .findAllByBookerIdAndStartBeforeOrderByStartDesc(booker.getId(), LocalDateTime.now());
+                        .findAllByBookerIdAndStartBeforeAndEndAfterOrderByStartDesc(booker.getId(), now, now);
                 break;
             case "PAST":
                 // где енд тайм < текущего времени
                 bookingsForUser = bookingRepository
-                        .findAllByBookerIdAndEndBeforeOrderByStartDesc(booker.getId(), LocalDateTime.now());
+                        .findAllByBookerIdAndEndBeforeOrderByStartDesc(booker.getId(), now);
                 break;
             case "FUTURE":
                 // где старт тайм > текущего времени
                 bookingsForUser = bookingRepository
-                        .findAllByBookerIdAndStartAfterOrderByStartDesc(booker.getId(), LocalDateTime.now());
+                        .findAllByBookerIdAndStartAfterOrderByStartDesc(booker.getId(), now);
                 break;
             case "WAITING":
                 bookingsForUser = bookingRepository
@@ -138,25 +139,26 @@ public class BookingServiceImpl implements BookingService {
                 .orElseThrow(() -> new NotFoundException("User with id = " + userId + " not found"));
 
         List<Booking> bookingsForUserItems;
+        LocalDateTime now = LocalDateTime.now();
         switch (state) {
             case "ALL":
                 bookingsForUserItems = bookingRepository
                         .findAllBookingsForUserItemsStateAllOrderByStartDesc(user.getId());
                 break;
             case "CURRENT":
-                // где старт тайм < текущего времени
+                // где старт тайм < текущего времени && энд тайм > текущего времени
                 bookingsForUserItems = bookingRepository
-                        .findAllBookingsForUserItemsStateCurrentOrderByStartDesc(user.getId(), LocalDateTime.now());
+                        .findAllBookingsForUserItemsStateCurrentOrderByStartDesc(user.getId(), now, now);
                 break;
             case "PAST":
                 // где енд тайм < текущего времени
                 bookingsForUserItems = bookingRepository
-                        .findAllBookingsForUserItemsStatePastOrderByStartDesc(user.getId(), LocalDateTime.now());
+                        .findAllBookingsForUserItemsStatePastOrderByStartDesc(user.getId(), now);
                 break;
             case "FUTURE":
                 // где старт тайм > текущего времени
                 bookingsForUserItems = bookingRepository
-                        .findAllBookingsForUserItemsStateFutureOrderByStartDesc(user.getId(), LocalDateTime.now());
+                        .findAllBookingsForUserItemsStateFutureOrderByStartDesc(user.getId(), now);
                 break;
             case "WAITING":
                 bookingsForUserItems = bookingRepository
