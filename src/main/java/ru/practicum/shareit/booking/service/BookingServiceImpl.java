@@ -7,6 +7,7 @@ import ru.practicum.shareit.booking.dto.BookingDtoMapper;
 import ru.practicum.shareit.booking.dto.BookingRequestDto;
 import ru.practicum.shareit.booking.dto.BookingResponseDto;
 import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.model.BookingState;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exception.BadRequestException;
@@ -35,6 +36,13 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public BookingResponseDto addBooking(Long userId, BookingRequestDto bookingRequestDto) {
         Booking booking = bookingDtoMapper.toBooking(bookingRequestDto);
+
+        if (booking.getStart().isEqual(booking.getEnd())) {
+            throw new BadRequestException("Start time must not be equal end time");
+        }
+        if (booking.getStart().isAfter(booking.getEnd())) {
+            throw new BadRequestException("End time must be after start time");
+        }
 
         Item item = itemRepository.findById(bookingRequestDto.getItemId())
                 .orElseThrow(() -> new NotFoundException("Item with id = " + bookingRequestDto.getItemId() + " not found"));
@@ -93,83 +101,83 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingResponseDto> getAllBookingsForUser(Long userId, String state) {
+    public List<BookingResponseDto> getAllBookingsForUser(Long userId, BookingState state) {
         User booker = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User with id = " + userId + " not found"));
 
         List<Booking> bookingsForUser;
         LocalDateTime now = LocalDateTime.now();
         switch (state) {
-            case "ALL":
+            case ALL:
                 bookingsForUser = bookingRepository.findAllByBookerIdOrderByStartDesc(booker.getId());
                 break;
-            case "CURRENT":
+            case CURRENT:
                 // где старт тайм < текущего времени && энд тайм > текущего времени
                 bookingsForUser = bookingRepository
                         .findAllByBookerIdAndStartBeforeAndEndAfterOrderByStartDesc(booker.getId(), now, now);
                 break;
-            case "PAST":
+            case PAST:
                 // где енд тайм < текущего времени
                 bookingsForUser = bookingRepository
                         .findAllByBookerIdAndEndBeforeOrderByStartDesc(booker.getId(), now);
                 break;
-            case "FUTURE":
+            case FUTURE:
                 // где старт тайм > текущего времени
                 bookingsForUser = bookingRepository
                         .findAllByBookerIdAndStartAfterOrderByStartDesc(booker.getId(), now);
                 break;
-            case "WAITING":
+            case WAITING:
                 bookingsForUser = bookingRepository
                         .findAllByBookerIdAndStatusOrderByStartDesc(booker.getId(), BookingStatus.WAITING);
                 break;
-            case "REJECTED":
+            case REJECTED:
                 bookingsForUser = bookingRepository
                         .findAllByBookerIdAndStatusOrderByStartDesc(booker.getId(), BookingStatus.REJECTED);
                 break;
             default:
-                throw new UnknownStateException(state);
+                throw new UnknownStateException(state.name());
         }
 
         return bookingsForUser.stream().map(bookingDtoMapper::toDto).collect(Collectors.toList());
     }
 
     @Override
-    public List<BookingResponseDto> getAllBookingsForUserItems(Long userId, String state) {
+    public List<BookingResponseDto> getAllBookingsForUserItems(Long userId, BookingState state) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User with id = " + userId + " not found"));
 
         List<Booking> bookingsForUserItems;
         LocalDateTime now = LocalDateTime.now();
         switch (state) {
-            case "ALL":
+            case ALL:
                 bookingsForUserItems = bookingRepository
                         .findAllBookingsForUserItemsStateAllOrderByStartDesc(user.getId());
                 break;
-            case "CURRENT":
+            case CURRENT:
                 // где старт тайм < текущего времени && энд тайм > текущего времени
                 bookingsForUserItems = bookingRepository
                         .findAllBookingsForUserItemsStateCurrentOrderByStartDesc(user.getId(), now, now);
                 break;
-            case "PAST":
+            case PAST:
                 // где енд тайм < текущего времени
                 bookingsForUserItems = bookingRepository
                         .findAllBookingsForUserItemsStatePastOrderByStartDesc(user.getId(), now);
                 break;
-            case "FUTURE":
+            case FUTURE:
                 // где старт тайм > текущего времени
                 bookingsForUserItems = bookingRepository
                         .findAllBookingsForUserItemsStateFutureOrderByStartDesc(user.getId(), now);
                 break;
-            case "WAITING":
+            case WAITING:
                 bookingsForUserItems = bookingRepository
                         .findAllBookingsForUserItemsByStatusOrderByStartDesc(user.getId(), BookingStatus.WAITING);
                 break;
-            case "REJECTED":
+            case REJECTED:
                 bookingsForUserItems = bookingRepository
                         .findAllBookingsForUserItemsByStatusOrderByStartDesc(user.getId(), BookingStatus.REJECTED);
                 break;
             default:
-                throw new UnknownStateException(state);
+                throw new UnknownStateException(state.name());
         }
 
         return bookingsForUserItems.stream().map(bookingDtoMapper::toDto).collect(Collectors.toList());

@@ -30,9 +30,9 @@ public class BookingRequestDto {
     private LocalDateTime end;
 
     @NotNull
-    private long itemId;
+    private Long itemId;
 
-    private long bookerId;
+    private Long bookerId;
 
     private BookingStatus status = BookingStatus.WAITING;
 }
