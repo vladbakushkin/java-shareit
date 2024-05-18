@@ -8,9 +8,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.dto.ItemListingDto;
-import ru.practicum.shareit.item.dto.UpdateItemDto;
+import ru.practicum.shareit.item.dto.ItemDetailsDto;
+import ru.practicum.shareit.item.dto.ItemRequestDto;
+import ru.practicum.shareit.item.dto.ItemUpdateDto;
 import ru.practicum.shareit.item.service.ItemService;
 
 import java.util.List;
@@ -37,17 +37,17 @@ class ItemControllerTest {
     @Test
     void addItem_RequestIsValid_ReturnItem() throws Exception {
         // given
-        ItemDto itemDto = createItemDto();
+        ItemDetailsDto itemDetailsDto = createItemDetailsDto();
 
         // when
-        when(itemService.addItem(any(Long.class), any(ItemDto.class))).thenReturn(itemDto);
+        when(itemService.addItem(any(Long.class), any(ItemRequestDto.class))).thenReturn(itemDetailsDto);
 
         // then
         mockMvc.perform(
                         post("/items")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .header("X-Sharer-User-Id", 1)
-                                .content(objectMapper.writeValueAsString(itemDto)))
+                                .content(objectMapper.writeValueAsString(itemDetailsDto)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Item"))
                 .andExpect(jsonPath("$.description").value("Description"))
@@ -57,31 +57,31 @@ class ItemControllerTest {
     @Test
     void updateItem_RequestIsValid_ReturnItem() throws Exception {
         // given
-        UpdateItemDto updateItemDto = createUpdateItemDto();
+        ItemDetailsDto itemDetailsDto = createItemDetailsDto();
 
         // when
-        when(itemService.updateItem(any(Long.class), any(Long.class), any(UpdateItemDto.class))).thenReturn(updateItemDto);
+        when(itemService.updateItem(any(Long.class), any(Long.class), any(ItemUpdateDto.class))).thenReturn(itemDetailsDto);
 
         // then
         mockMvc.perform(
-                        patch("/items/" + updateItemDto.getId())
+                        patch("/items/" + itemDetailsDto.getId())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .header("X-Sharer-User-Id", 1)
-                                .content(objectMapper.writeValueAsString(updateItemDto)))
+                                .content(objectMapper.writeValueAsString(itemDetailsDto)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value("1"))
-                .andExpect(jsonPath("$.name").value("Updated Item"))
-                .andExpect(jsonPath("$.description").value("Updated Description"))
-                .andExpect(jsonPath("$.available").value("false"));
+                .andExpect(jsonPath("$.name").value("Item"))
+                .andExpect(jsonPath("$.description").value("Description"))
+                .andExpect(jsonPath("$.available").value("true"));
     }
 
     @Test
     void getItem() throws Exception {
         // given
-        ItemListingDto itemDto = createItemListingDto();
+        ItemDetailsDto itemDetailsDto = createItemDetailsDto();
 
         // when
-        when(itemService.getItem(any(Long.class), any(Long.class))).thenReturn(itemDto);
+        when(itemService.getItem(any(Long.class), any(Long.class))).thenReturn(itemDetailsDto);
 
         // then
         mockMvc.perform(
@@ -97,14 +97,14 @@ class ItemControllerTest {
     @Test
     void getAllItemsByOwner() throws Exception {
         // given
-        ItemListingDto itemDto1 = createItemListingDto();
-        ItemListingDto itemDto2 = createItemListingDto();
-        itemDto2.setName("Item2");
-        itemDto2.setDescription("Description2");
-        itemDto2.setAvailable(false);
+        ItemDetailsDto itemDetailsDto1 = createItemDetailsDto();
+        ItemDetailsDto itemDetailsDto2 = createItemDetailsDto();
+        itemDetailsDto2.setName("Item2");
+        itemDetailsDto2.setDescription("Description2");
+        itemDetailsDto2.setAvailable(false);
 
         // when
-        when(itemService.getAllItemsByOwner(any(Long.class))).thenReturn(List.of(itemDto1, itemDto2));
+        when(itemService.getAllItemsByOwner(any(Long.class))).thenReturn(List.of(itemDetailsDto1, itemDetailsDto2));
 
         // then
         mockMvc.perform(
@@ -123,14 +123,14 @@ class ItemControllerTest {
     @Test
     void searchItem() throws Exception {
         // given
-        ItemDto itemDto1 = createItemDto();
-        ItemDto itemDto2 = createItemDto();
-        itemDto2.setName("Item2");
-        itemDto2.setDescription("Description2");
-        itemDto2.setAvailable(false);
+        ItemDetailsDto itemDetailsDto1 = createItemDetailsDto();
+        ItemDetailsDto itemDetailsDto2 = createItemDetailsDto();
+        itemDetailsDto2.setName("Item2");
+        itemDetailsDto2.setDescription("Description2");
+        itemDetailsDto2.setAvailable(false);
 
         // when
-        when(itemService.searchAvailableItem(any(String.class))).thenReturn(List.of(itemDto1, itemDto2));
+        when(itemService.searchAvailableItem(any(String.class))).thenReturn(List.of(itemDetailsDto1, itemDetailsDto2));
 
         // then
         mockMvc.perform(
@@ -146,26 +146,8 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$[1].available").value("false"));
     }
 
-    private ItemDto createItemDto() {
-        return ItemDto.builder()
-                .id(1L)
-                .name("Item")
-                .description("Description")
-                .available(true)
-                .build();
-    }
-
-    private UpdateItemDto createUpdateItemDto() {
-        return UpdateItemDto.builder()
-                .id(1L)
-                .name("Updated Item")
-                .description("Updated Description")
-                .available(false)
-                .build();
-    }
-
-    private ItemListingDto createItemListingDto() {
-        return ItemListingDto.builder()
+    private ItemDetailsDto createItemDetailsDto() {
+        return ItemDetailsDto.builder()
                 .id(1L)
                 .name("Item")
                 .description("Description")
