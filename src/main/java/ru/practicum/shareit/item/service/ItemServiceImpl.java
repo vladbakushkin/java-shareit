@@ -18,10 +18,7 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -81,14 +78,24 @@ public class ItemServiceImpl implements ItemService {
     public ItemDetailsDto getItem(Long userId, Long itemId) {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Item with id = " + itemId + " not found"));
-        return makeItemWithBookingsAndComments(userId, item);
+
+        List<Booking> bookingsForItems = bookingRepository.findAllByItemIdOrderByEndDesc(item.getId());
+
+        List<Comment> comments = commentRepository.findAllByItemId(item.getId());
+
+        return makeItemWithBookingsAndComments(userId, item, bookingsForItems, comments);
     }
 
     @Override
     public List<ItemDetailsDto> getAllItemsByOwner(Long userId) {
         List<Item> items = itemRepository.findAllByUserId(userId);
+
+        List<Booking> bookingsForItems = bookingRepository.findAllByItemInOrderByEndDesc(items);
+
+        List<Comment> comments = commentRepository.findAllByItemIn(items);
+
         return items.stream()
-                .map(i -> this.makeItemWithBookingsAndComments(userId, i))
+                .map(i -> this.makeItemWithBookingsAndComments(userId, i, bookingsForItems, comments))
                 .collect(Collectors.toList());
     }
 
@@ -126,35 +133,36 @@ public class ItemServiceImpl implements ItemService {
         return commentDtoMapper.toResponseDto(savedComment);
     }
 
-    private ItemDetailsDto makeItemWithBookingsAndComments(Long userId, Item item) {
-        List<Booking> bookingsForItemOrderByEndDesc = bookingRepository.findAllByItemIdOrderByEndDesc(item.getId());
-        List<Booking> bookingsForItemOrderByStartAsc = bookingRepository.findAllByItemIdOrderByStartAsc(item.getId());
-
+    private ItemDetailsDto makeItemWithBookingsAndComments(Long userId, Item item, List<Booking> bookings,
+                                                           List<Comment> comments) {
         LocalDateTime now = LocalDateTime.now();
 
-        Optional<Booking> last = bookingsForItemOrderByEndDesc.stream()
+        Optional<Booking> last = bookings.stream()
                 .filter(b -> b.getStatus().equals(BookingStatus.APPROVED))
                 .filter(b -> Objects.equals(b.getItem().getUser().getId(), userId))
+                .filter(b -> Objects.equals(b.getItem().getId(), item.getId()))
                 .filter(b -> b.getStart().isBefore(now))
                 .findFirst();
+
+        List<Booking> bookingsForItemOrderByStartAsc = bookings.stream()
+                .sorted(Comparator.comparing(Booking::getStart))
+                .collect(Collectors.toList());
 
         Optional<Booking> next = bookingsForItemOrderByStartAsc.stream()
                 .filter(b -> b.getStatus().equals(BookingStatus.APPROVED))
                 .filter(b -> Objects.equals(b.getItem().getUser().getId(), userId))
+                .filter(b -> Objects.equals(b.getItem().getId(), item.getId()))
                 .filter(b -> b.getStart().isAfter(now) || b.getStart().isEqual(now))
                 .findFirst();
 
         ItemDetailsDto dto = itemDtoMapper.toItemDetailsDto(item);
-
         last.ifPresent(booking -> dto.setLastBooking(bookingDtoMapper.toBookingRequestDto(last.get())));
         next.ifPresent(booking -> dto.setNextBooking(bookingDtoMapper.toBookingRequestDto(next.get())));
-
-        List<Comment> comments = commentRepository.findAllByItemId(item.getId());
-
         if (comments != null) {
-            dto.setComments(comments.stream().map(commentDtoMapper::toResponseDto).collect(Collectors.toList()));
+            dto.setComments(comments.stream()
+                    .map(commentDtoMapper::toResponseDto)
+                    .collect(Collectors.toList()));
         }
-
         return dto;
     }
 }
