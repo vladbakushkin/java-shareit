@@ -26,7 +26,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "join Item i on i.id = b.item.id " +
             "where i.user.id = ?1 " +
             "order by b.start desc")
-    List<Booking> findAllBookingsForUserItemsStateAllOrderByStartDesc(Long userId);
+    List<Booking> findAllBookingsForUserItemsOrderByStartDesc(Long userId);
 
     @Query("select b from Booking b " +
             "join Item i on i.id = b.item.id " +
@@ -41,21 +41,23 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "and b.start < ?2 " +
             "and b.end > ?3 " +
             "order by b.start desc")
-    List<Booking> findAllBookingsForUserItemsStateCurrentOrderByStartDesc(Long userId, LocalDateTime start, LocalDateTime end);
+    List<Booking> findAllBookingsForUserItemsWhereStartBeforeAndEndAfterOrderByStartDesc(Long userId,
+                                                                                         LocalDateTime start,
+                                                                                         LocalDateTime end);
 
     @Query("select b from Booking b " +
             "join Item i on i.id = b.item.id " +
             "where i.user.id = ?1 " +
             "and b.end < ?2 " +
             "order by b.start desc")
-    List<Booking> findAllBookingsForUserItemsStatePastOrderByStartDesc(Long userId, LocalDateTime start);
+    List<Booking> findAllBookingsForUserItemsWhereEndBeforeOrderByStartDesc(Long userId, LocalDateTime start);
 
     @Query("select b from Booking b " +
             "join Item i on i.id = b.item.id " +
             "where i.user.id = ?1 " +
             "and b.start > ?2 " +
             "order by b.start desc")
-    List<Booking> findAllBookingsForUserItemsStateFutureOrderByStartDesc(Long userId, LocalDateTime start);
+    List<Booking> findAllBookingsForUserItemsWhereStartAfterOrderByStartDesc(Long userId, LocalDateTime start);
 
     List<Booking> findAllByItemIdOrderByEndDesc(Long itemId);
 

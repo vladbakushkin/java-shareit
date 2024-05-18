@@ -112,17 +112,14 @@ public class BookingServiceImpl implements BookingService {
                 bookingsForUser = bookingRepository.findAllByBookerIdOrderByStartDesc(booker.getId());
                 break;
             case CURRENT:
-                // где старт тайм < текущего времени && энд тайм > текущего времени
                 bookingsForUser = bookingRepository
                         .findAllByBookerIdAndStartBeforeAndEndAfterOrderByStartDesc(booker.getId(), now, now);
                 break;
             case PAST:
-                // где енд тайм < текущего времени
                 bookingsForUser = bookingRepository
                         .findAllByBookerIdAndEndBeforeOrderByStartDesc(booker.getId(), now);
                 break;
             case FUTURE:
-                // где старт тайм > текущего времени
                 bookingsForUser = bookingRepository
                         .findAllByBookerIdAndStartAfterOrderByStartDesc(booker.getId(), now);
                 break;
@@ -151,22 +148,19 @@ public class BookingServiceImpl implements BookingService {
         switch (state) {
             case ALL:
                 bookingsForUserItems = bookingRepository
-                        .findAllBookingsForUserItemsStateAllOrderByStartDesc(user.getId());
+                        .findAllBookingsForUserItemsOrderByStartDesc(user.getId());
                 break;
             case CURRENT:
-                // где старт тайм < текущего времени && энд тайм > текущего времени
                 bookingsForUserItems = bookingRepository
-                        .findAllBookingsForUserItemsStateCurrentOrderByStartDesc(user.getId(), now, now);
+                        .findAllBookingsForUserItemsWhereStartBeforeAndEndAfterOrderByStartDesc(user.getId(), now, now);
                 break;
             case PAST:
-                // где енд тайм < текущего времени
                 bookingsForUserItems = bookingRepository
-                        .findAllBookingsForUserItemsStatePastOrderByStartDesc(user.getId(), now);
+                        .findAllBookingsForUserItemsWhereEndBeforeOrderByStartDesc(user.getId(), now);
                 break;
             case FUTURE:
-                // где старт тайм > текущего времени
                 bookingsForUserItems = bookingRepository
-                        .findAllBookingsForUserItemsStateFutureOrderByStartDesc(user.getId(), now);
+                        .findAllBookingsForUserItemsWhereStartAfterOrderByStartDesc(user.getId(), now);
                 break;
             case WAITING:
                 bookingsForUserItems = bookingRepository

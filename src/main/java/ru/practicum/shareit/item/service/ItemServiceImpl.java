@@ -81,14 +81,14 @@ public class ItemServiceImpl implements ItemService {
     public ItemDetailsDto getItem(Long userId, Long itemId) {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Item with id = " + itemId + " not found"));
-        return makeItemWithBookings(userId, item);
+        return makeItemWithBookingsAndComments(userId, item);
     }
 
     @Override
     public List<ItemDetailsDto> getAllItemsByOwner(Long userId) {
         List<Item> items = itemRepository.findAllByUserId(userId);
         return items.stream()
-                .map(i -> this.makeItemWithBookings(userId, i))
+                .map(i -> this.makeItemWithBookingsAndComments(userId, i))
                 .collect(Collectors.toList());
     }
 
@@ -97,7 +97,6 @@ public class ItemServiceImpl implements ItemService {
         if (text.isBlank()) {
             return new ArrayList<>();
         }
-        //
         return itemRepository.searchAvailableItem(text).stream()
                 .map(itemDtoMapper::toItemDetailsDto)
                 .collect(Collectors.toList());
@@ -127,7 +126,7 @@ public class ItemServiceImpl implements ItemService {
         return commentDtoMapper.toResponseDto(savedComment);
     }
 
-    private ItemDetailsDto makeItemWithBookings(Long userId, Item item) {
+    private ItemDetailsDto makeItemWithBookingsAndComments(Long userId, Item item) {
         List<Booking> bookingsForItemOrderByEndDesc = bookingRepository.findAllByItemIdOrderByEndDesc(item.getId());
         List<Booking> bookingsForItemOrderByStartAsc = bookingRepository.findAllByItemIdOrderByStartAsc(item.getId());
 
