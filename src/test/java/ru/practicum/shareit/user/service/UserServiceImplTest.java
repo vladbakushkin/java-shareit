@@ -6,10 +6,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import ru.practicum.shareit.user.dto.NewUserDto;
-import ru.practicum.shareit.user.dto.NewUserDtoMapper;
-import ru.practicum.shareit.user.dto.UpdateUserDto;
-import ru.practicum.shareit.user.dto.UpdateUserDtoMapper;
+import ru.practicum.shareit.user.dto.UserNewDto;
+import ru.practicum.shareit.user.dto.UserResponseDto;
+import ru.practicum.shareit.user.dto.UserUpdateDto;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
@@ -42,11 +41,11 @@ class UserServiceImplTest {
     @Test
     void saveUser_Valid_ReturnsUser() {
         // given
-        NewUserDto userToSave = createNewUserDto();
+        UserNewDto userToSave = createNewUserDto();
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
 
         // when
-        NewUserDto savedUser = userService.saveUser(userToSave);
+        UserResponseDto savedUser = userService.saveUser(userToSave);
 
         // then
         assertNotNull(savedUser);
@@ -57,12 +56,12 @@ class UserServiceImplTest {
     @Test
     void updateUser_Valid_ReturnsUser() {
         // given
-        UpdateUserDto userToUpdate = createUpdateUserDto();
+        UserUpdateDto userToUpdate = createUpdateUserDto();
         when(userRepository.save(any(User.class))).thenReturn(updatedUser);
         when(userRepository.findById(any(Long.class))).thenReturn(Optional.ofNullable(updatedUser));
 
         // when
-        UpdateUserDto updatedUser = userService.updateUser(userToUpdate.getId(), userToUpdate);
+        UserResponseDto updatedUser = userService.updateUser(userToUpdate.getId(), userToUpdate);
 
         // then
         assertNotNull(updatedUser);
@@ -73,11 +72,11 @@ class UserServiceImplTest {
     @Test
     void getUser_ReturnsUser() {
         // given
-        NewUserDto userToGet = createNewUserDto();
+        UserNewDto userToGet = createNewUserDto();
         when(userRepository.findById(any(Long.class))).thenReturn(Optional.ofNullable(savedUser));
 
         // when
-        NewUserDto user = userService.getUser(1L);
+        UserResponseDto user = userService.getUser(1L);
 
         // then
         assertNotNull(user);
@@ -88,12 +87,12 @@ class UserServiceImplTest {
     @Test
     void getAllUsers_ReturnsAllUsers() {
         // given
-        NewUserDto newUserToGet = createNewUserDto();
-        UpdateUserDto updateUserToGet = createUpdateUserDto();
+        UserNewDto newUserToGet = createNewUserDto();
+        UserUpdateDto updateUserToGet = createUpdateUserDto();
         when(userRepository.findAll()).thenReturn(List.of(savedUser, updatedUser));
 
         // when
-        List<NewUserDto> users = userService.getAllUsers();
+        List<UserResponseDto> users = userService.getAllUsers();
 
         // then
         assertNotNull(users);
@@ -117,20 +116,18 @@ class UserServiceImplTest {
         verify(userRepository, times(1)).deleteById(any(Long.class));
     }
 
-    private NewUserDto createNewUserDto() {
-        NewUserDtoMapper newUserDtoMapper = new NewUserDtoMapper();
-        User user = new User();
-        user.setName("User");
-        user.setEmail("user@email.com");
-        return newUserDtoMapper.toDto(user);
+    private UserNewDto createNewUserDto() {
+        UserNewDto userNewDto = new UserNewDto();
+        userNewDto.setName("User");
+        userNewDto.setEmail("user@email.com");
+        return userNewDto;
     }
 
-    private UpdateUserDto createUpdateUserDto() {
-        UpdateUserDtoMapper updateUserDtoMapper = new UpdateUserDtoMapper();
-        User user = new User();
-        user.setId(1L);
-        user.setName("New Name");
-        user.setEmail("user@email.com");
-        return updateUserDtoMapper.toDto(user);
+    private UserUpdateDto createUpdateUserDto() {
+        UserUpdateDto userUpdateDto = new UserUpdateDto();
+        userUpdateDto.setId(1L);
+        userUpdateDto.setName("New Name");
+        userUpdateDto.setEmail("user@email.com");
+        return userUpdateDto;
     }
 }

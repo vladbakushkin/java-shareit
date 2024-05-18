@@ -3,10 +3,10 @@ package ru.practicum.shareit.user.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.user.dto.NewUserDto;
-import ru.practicum.shareit.user.dto.NewUserDtoMapper;
-import ru.practicum.shareit.user.dto.UpdateUserDto;
-import ru.practicum.shareit.user.dto.UpdateUserDtoMapper;
+import ru.practicum.shareit.user.dto.UserDtoMapper;
+import ru.practicum.shareit.user.dto.UserNewDto;
+import ru.practicum.shareit.user.dto.UserResponseDto;
+import ru.practicum.shareit.user.dto.UserUpdateDto;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
@@ -18,19 +18,18 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
-    private final NewUserDtoMapper newUserDtoMapper = new NewUserDtoMapper();
-    private final UpdateUserDtoMapper updateUserDtoMapper = new UpdateUserDtoMapper();
+    private final UserDtoMapper userDtoMapper = new UserDtoMapper();
 
     @Override
-    public NewUserDto saveUser(NewUserDto newUserDto) {
-        User user = newUserDtoMapper.toUser(newUserDto);
+    public UserResponseDto saveUser(UserNewDto userNewDto) {
+        User user = userDtoMapper.toUser(userNewDto);
         User savedUser = userRepository.save(user);
-        return newUserDtoMapper.toDto(savedUser);
+        return userDtoMapper.toDto(savedUser);
     }
 
     @Override
-    public UpdateUserDto updateUser(Long userId, UpdateUserDto updateUserDto) {
-        User user = updateUserDtoMapper.toUser(updateUserDto);
+    public UserResponseDto updateUser(Long userId, UserUpdateDto userUpdateDto) {
+        User user = userDtoMapper.toUser(userUpdateDto);
 
         User userToUpdate = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User with id = " + userId + " not found"));
@@ -44,21 +43,21 @@ public class UserServiceImpl implements UserService {
         }
 
         User updatedUser = userRepository.save(userToUpdate);
-        return updateUserDtoMapper.toDto(updatedUser);
+        return userDtoMapper.toDto(updatedUser);
     }
 
     @Override
-    public NewUserDto getUser(Long userId) {
+    public UserResponseDto getUser(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User with id = " + userId + " not found"));
-        return newUserDtoMapper.toDto(user);
+        return userDtoMapper.toDto(user);
     }
 
     @Override
-    public List<NewUserDto> getAllUsers() {
+    public List<UserResponseDto> getAllUsers() {
         // возможно стоит добавить пагинацию
         return userRepository.findAll().stream()
-                .map(newUserDtoMapper::toDto)
+                .map(userDtoMapper::toDto)
                 .collect(Collectors.toList());
     }
 

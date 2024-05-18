@@ -8,11 +8,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import ru.practicum.shareit.user.dto.NewUserDto;
-import ru.practicum.shareit.user.dto.NewUserDtoMapper;
-import ru.practicum.shareit.user.dto.UpdateUserDto;
-import ru.practicum.shareit.user.dto.UpdateUserDtoMapper;
-import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.user.dto.UserNewDto;
+import ru.practicum.shareit.user.dto.UserResponseDto;
+import ru.practicum.shareit.user.dto.UserUpdateDto;
 import ru.practicum.shareit.user.service.UserService;
 
 import java.util.List;
@@ -40,16 +38,16 @@ class UserControllerTest {
     @Test
     void saveUser_RequestIsValid_ReturnUser() throws Exception {
         // given
-        NewUserDto newUserDto = createNewUserDto();
+        UserResponseDto userResponseDto = createUserResponseDto();
 
         // when
-        when(userService.saveUser(any(NewUserDto.class))).thenReturn(newUserDto);
+        when(userService.saveUser(any(UserNewDto.class))).thenReturn(userResponseDto);
 
         // then
         mockMvc.perform(
                         post("/users")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(newUserDto)))
+                                .content(objectMapper.writeValueAsString(userResponseDto)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value("User"))
                 .andExpect(jsonPath("$.email").value("user@email.com"));
@@ -58,28 +56,28 @@ class UserControllerTest {
     @Test
     void updateUser_RequestIsValid_ReturnUser() throws Exception {
         // given
-        UpdateUserDto updateUserDto = createUpdateUserDto();
+        UserResponseDto userResponseDto = createUserResponseDto();
 
         // when
-        when(userService.updateUser(any(Long.class), any(UpdateUserDto.class))).thenReturn(updateUserDto);
+        when(userService.updateUser(any(Long.class), any(UserUpdateDto.class))).thenReturn(userResponseDto);
 
         // then
         mockMvc.perform(
-                        patch("/users/" + updateUserDto.getId())
+                        patch("/users/" + userResponseDto.getId())
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(updateUserDto)))
+                                .content(objectMapper.writeValueAsString(userResponseDto)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("New Name"))
+                .andExpect(jsonPath("$.name").value("User"))
                 .andExpect(jsonPath("$.email").value("user@email.com"));
     }
 
     @Test
     void getUser() throws Exception {
         // given
-        NewUserDto userToGet = createNewUserDto();
+        UserResponseDto userResponseDto = createUserResponseDto();
 
         // when
-        when(userService.getUser(any(Long.class))).thenReturn(userToGet);
+        when(userService.getUser(any(Long.class))).thenReturn(userResponseDto);
 
         // then
         mockMvc.perform(
@@ -93,12 +91,12 @@ class UserControllerTest {
     @Test
     void getAllUsers() throws Exception {
         // given
-        NewUserDto newUserToGet1 = createNewUserDto();
-        NewUserDto newUserToGet2 = createNewUserDto();
-        newUserToGet2.setEmail("user2@email.com");
+        UserResponseDto userResponseDto1 = createUserResponseDto();
+        UserResponseDto userResponseDto2 = createUserResponseDto();
+        userResponseDto2.setEmail("user2@email.com");
 
         // when
-        when(userService.getAllUsers()).thenReturn(List.of(newUserToGet1, newUserToGet2));
+        when(userService.getAllUsers()).thenReturn(List.of(userResponseDto1, userResponseDto2));
 
         // then
         mockMvc.perform(
@@ -123,20 +121,11 @@ class UserControllerTest {
                 .andExpect(status().isOk());
     }
 
-    private NewUserDto createNewUserDto() {
-        NewUserDtoMapper newUserDtoMapper = new NewUserDtoMapper();
-        User user = new User();
-        user.setName("User");
-        user.setEmail("user@email.com");
-        return newUserDtoMapper.toDto(user);
-    }
-
-    private UpdateUserDto createUpdateUserDto() {
-        UpdateUserDtoMapper updateUserDtoMapper = new UpdateUserDtoMapper();
-        User user = new User();
-        user.setId(1L);
-        user.setName("New Name");
-        user.setEmail("user@email.com");
-        return updateUserDtoMapper.toDto(user);
+    private UserResponseDto createUserResponseDto() {
+        UserResponseDto userResponseDto = new UserResponseDto();
+        userResponseDto.setId(1L);
+        userResponseDto.setName("User");
+        userResponseDto.setEmail("user@email.com");
+        return userResponseDto;
     }
 }
