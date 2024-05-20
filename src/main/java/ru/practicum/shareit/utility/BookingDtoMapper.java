@@ -1,15 +1,16 @@
-package ru.practicum.shareit.booking.dto;
+package ru.practicum.shareit.utility;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
+import ru.practicum.shareit.booking.dto.BookingRequestDto;
+import ru.practicum.shareit.booking.dto.BookingResponseDto;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
 
-@Component
-@RequiredArgsConstructor
-public class BookingDtoMapper {
+public final class BookingDtoMapper {
 
-    public BookingResponseDto toDto(Booking booking) {
+    private BookingDtoMapper() {
+    }
+
+    public static BookingResponseDto toDto(Booking booking) {
         return BookingResponseDto.builder()
                 .id(booking.getId())
                 .start(booking.getStart())
@@ -20,7 +21,7 @@ public class BookingDtoMapper {
                 .build();
     }
 
-    public BookingRequestDto toBookingRequestDto(Booking booking) {
+    public static BookingRequestDto toBookingRequestDto(Booking booking) {
         return BookingRequestDto.builder()
                 .id(booking.getId())
                 .start(booking.getStart())
@@ -31,7 +32,7 @@ public class BookingDtoMapper {
                 .build();
     }
 
-    public Booking toBooking(BookingRequestDto bookingRequestDto) {
+    public static Booking toBooking(BookingRequestDto bookingRequestDto) {
         return Booking.builder()
                 .start(bookingRequestDto.getStart())
                 .end(bookingRequestDto.getEnd())

@@ -3,12 +3,12 @@ package ru.practicum.shareit.user.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.user.dto.UserDtoMapper;
 import ru.practicum.shareit.user.dto.UserNewDto;
 import ru.practicum.shareit.user.dto.UserResponseDto;
 import ru.practicum.shareit.user.dto.UserUpdateDto;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
+import ru.practicum.shareit.utility.UserDtoMapper;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -18,18 +18,16 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
-    private final UserDtoMapper userDtoMapper = new UserDtoMapper();
-
     @Override
     public UserResponseDto saveUser(UserNewDto userNewDto) {
-        User user = userDtoMapper.toUser(userNewDto);
+        User user = UserDtoMapper.toUser(userNewDto);
         User savedUser = userRepository.save(user);
-        return userDtoMapper.toDto(savedUser);
+        return UserDtoMapper.toDto(savedUser);
     }
 
     @Override
     public UserResponseDto updateUser(Long userId, UserUpdateDto userUpdateDto) {
-        User user = userDtoMapper.toUser(userUpdateDto);
+        User user = UserDtoMapper.toUser(userUpdateDto);
 
         User userToUpdate = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User with id = " + userId + " not found"));
@@ -43,21 +41,21 @@ public class UserServiceImpl implements UserService {
         }
 
         User updatedUser = userRepository.save(userToUpdate);
-        return userDtoMapper.toDto(updatedUser);
+        return UserDtoMapper.toDto(updatedUser);
     }
 
     @Override
     public UserResponseDto getUser(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User with id = " + userId + " not found"));
-        return userDtoMapper.toDto(user);
+        return UserDtoMapper.toDto(user);
     }
 
     @Override
     public List<UserResponseDto> getAllUsers() {
         // возможно стоит добавить пагинацию
         return userRepository.findAll().stream()
-                .map(userDtoMapper::toDto)
+                .map(UserDtoMapper::toDto)
                 .collect(Collectors.toList());
     }
 

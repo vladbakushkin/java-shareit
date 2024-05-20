@@ -3,7 +3,6 @@ package ru.practicum.shareit.booking.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.booking.dto.BookingDtoMapper;
 import ru.practicum.shareit.booking.dto.BookingRequestDto;
 import ru.practicum.shareit.booking.dto.BookingResponseDto;
 import ru.practicum.shareit.booking.model.Booking;
@@ -17,6 +16,7 @@ import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
+import ru.practicum.shareit.utility.BookingDtoMapper;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,13 +29,11 @@ import java.util.stream.Collectors;
 public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final ItemRepository itemRepository;
-
-    private final BookingDtoMapper bookingDtoMapper;
     private final UserRepository userRepository;
 
     @Override
     public BookingResponseDto addBooking(Long userId, BookingRequestDto bookingRequestDto) {
-        Booking booking = bookingDtoMapper.toBooking(bookingRequestDto);
+        Booking booking = BookingDtoMapper.toBooking(bookingRequestDto);
 
         if (booking.getStart().isEqual(booking.getEnd())) {
             throw new BadRequestException("Start time must not be equal end time");
@@ -61,7 +59,7 @@ public class BookingServiceImpl implements BookingService {
         }
 
         Booking savedBooking = bookingRepository.save(booking);
-        return bookingDtoMapper.toDto(savedBooking);
+        return BookingDtoMapper.toDto(savedBooking);
     }
 
     @Override
@@ -73,16 +71,14 @@ public class BookingServiceImpl implements BookingService {
             throw new NotFoundException("User with id = " + userId + " not owner");
         }
 
-        if (approved) {
-            if (booking.getStatus() == BookingStatus.APPROVED) {
-                throw new BadRequestException("Booking with id = " + bookingId + " is already approved");
-            }
-            booking.setStatus(BookingStatus.APPROVED);
-        } else {
-            booking.setStatus(BookingStatus.REJECTED);
+        if (approved && booking.getStatus() == BookingStatus.APPROVED) {
+            throw new BadRequestException("Booking with id = " + bookingId + " is already approved");
         }
+
+        booking.setStatus(approved ? BookingStatus.APPROVED : BookingStatus.REJECTED);
+
         Booking updatedBooking = bookingRepository.save(booking);
-        return bookingDtoMapper.toDto(updatedBooking);
+        return BookingDtoMapper.toDto(updatedBooking);
     }
 
     @Override
@@ -97,7 +93,7 @@ public class BookingServiceImpl implements BookingService {
             throw new NotFoundException("User with id = " + userId + " is not owner of booking or item");
         }
 
-        return bookingDtoMapper.toDto(booking);
+        return BookingDtoMapper.toDto(booking);
     }
 
     @Override
@@ -135,7 +131,7 @@ public class BookingServiceImpl implements BookingService {
                 throw new UnknownStateException(state.name());
         }
 
-        return bookingsForUser.stream().map(bookingDtoMapper::toDto).collect(Collectors.toList());
+        return bookingsForUser.stream().map(BookingDtoMapper::toDto).collect(Collectors.toList());
     }
 
     @Override
@@ -174,6 +170,6 @@ public class BookingServiceImpl implements BookingService {
                 throw new UnknownStateException(state.name());
         }
 
-        return bookingsForUserItems.stream().map(bookingDtoMapper::toDto).collect(Collectors.toList());
+        return bookingsForUserItems.stream().map(BookingDtoMapper::toDto).collect(Collectors.toList());
     }
 }

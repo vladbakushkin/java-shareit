@@ -1,14 +1,17 @@
-package ru.practicum.shareit.item.dto;
+package ru.practicum.shareit.utility;
 
-import org.springframework.stereotype.Component;
+import ru.practicum.shareit.item.dto.CommentRequestDto;
+import ru.practicum.shareit.item.dto.CommentResponseDto;
 import ru.practicum.shareit.item.model.Comment;
 
 import java.time.LocalDateTime;
 
-@Component
-public class CommentDtoMapper {
+public final class CommentDtoMapper {
 
-    public CommentResponseDto toResponseDto(Comment comment) {
+    private CommentDtoMapper() {
+    }
+
+    public static CommentResponseDto toResponseDto(Comment comment) {
         return CommentResponseDto.builder()
                 .id(comment.getId())
                 .text(comment.getText())
@@ -17,7 +20,7 @@ public class CommentDtoMapper {
                 .build();
     }
 
-    public Comment toComment(CommentRequestDto dto) {
+    public static Comment toComment(CommentRequestDto dto) {
         return Comment.builder()
                 .text(dto.getText())
                 .build();
