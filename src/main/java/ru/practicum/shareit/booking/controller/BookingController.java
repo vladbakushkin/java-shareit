@@ -8,6 +8,7 @@ import ru.practicum.shareit.booking.dto.BookingRequestDto;
 import ru.practicum.shareit.booking.dto.BookingResponseDto;
 import ru.practicum.shareit.booking.model.BookingState;
 import ru.practicum.shareit.booking.service.BookingService;
+import ru.practicum.shareit.utility.CustomHeaders;
 
 import java.util.List;
 
@@ -19,32 +20,32 @@ public class BookingController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public BookingResponseDto addBooking(@RequestHeader("X-Sharer-User-Id") Long userId,
+    public BookingResponseDto addBooking(@RequestHeader(CustomHeaders.X_SHARER_USER_ID) Long userId,
                                          @Validated @RequestBody BookingRequestDto bookingDto) {
         return bookingService.addBooking(userId, bookingDto);
     }
 
     @PatchMapping("/{bookingId}")
-    public BookingResponseDto handleBooking(@RequestHeader("X-Sharer-User-Id") Long userId,
+    public BookingResponseDto handleBooking(@RequestHeader(CustomHeaders.X_SHARER_USER_ID) Long userId,
                                             @PathVariable Long bookingId,
                                             @RequestParam boolean approved) {
         return bookingService.handleBooking(userId, bookingId, approved);
     }
 
     @GetMapping("/{bookingId}")
-    public BookingResponseDto getBooking(@RequestHeader("X-Sharer-User-Id") Long userId,
+    public BookingResponseDto getBooking(@RequestHeader(CustomHeaders.X_SHARER_USER_ID) Long userId,
                                          @PathVariable Long bookingId) {
         return bookingService.getBooking(userId, bookingId);
     }
 
     @GetMapping
-    public List<BookingResponseDto> getAllBookingsForUser(@RequestHeader("X-Sharer-User-Id") Long userId,
+    public List<BookingResponseDto> getAllBookingsForUser(@RequestHeader(CustomHeaders.X_SHARER_USER_ID) Long userId,
                                                           @RequestParam(defaultValue = "ALL") BookingState state) {
         return bookingService.getAllBookingsForUser(userId, state);
     }
 
     @GetMapping("/owner")
-    public List<BookingResponseDto> getAllBookingsForUserItems(@RequestHeader("X-Sharer-User-Id") Long userId,
+    public List<BookingResponseDto> getAllBookingsForUserItems(@RequestHeader(CustomHeaders.X_SHARER_USER_ID) Long userId,
                                                                @RequestParam(defaultValue = "ALL") BookingState state) {
         return bookingService.getAllBookingsForUserItems(userId, state);
     }
