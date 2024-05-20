@@ -118,8 +118,8 @@ public class ItemServiceImpl implements ItemService {
         List<Booking> bookingsForItem = bookingRepository.findAllByItemIdOrderByEndDesc(item.getId());
 
         bookingsForItem.stream()
-                .filter(b -> Objects.equals(b.getBooker().getId(), author.getId()))
-                .filter(b -> b.getEnd().isBefore(LocalDateTime.now()))
+                .filter(b -> Objects.equals(b.getBooker().getId(), author.getId()) &&
+                        b.getEnd().isBefore(LocalDateTime.now()))
                 .findFirst()
                 .orElseThrow(() -> new BadRequestException("User with id = " + userId +
                         " not booking the item id = " + item.getId()));
@@ -136,10 +136,10 @@ public class ItemServiceImpl implements ItemService {
         LocalDateTime now = LocalDateTime.now();
 
         Optional<Booking> last = bookings.stream()
-                .filter(b -> b.getStatus().equals(BookingStatus.APPROVED))
-                .filter(b -> Objects.equals(b.getItem().getUser().getId(), userId))
-                .filter(b -> Objects.equals(b.getItem().getId(), item.getId()))
-                .filter(b -> b.getStart().isBefore(now))
+                .filter(b -> b.getStatus().equals(BookingStatus.APPROVED) &&
+                        Objects.equals(b.getItem().getUser().getId(), userId) &&
+                        Objects.equals(b.getItem().getId(), item.getId()) &&
+                        b.getStart().isBefore(now))
                 .findFirst();
 
 
@@ -148,10 +148,10 @@ public class ItemServiceImpl implements ItemService {
                 .collect(Collectors.toList());
 
         Optional<Booking> next = bookingsForItemOrderByStartAsc.stream()
-                .filter(b -> b.getStatus().equals(BookingStatus.APPROVED))
-                .filter(b -> Objects.equals(b.getItem().getUser().getId(), userId))
-                .filter(b -> Objects.equals(b.getItem().getId(), item.getId()))
-                .filter(b -> b.getStart().isAfter(now) || b.getStart().isEqual(now))
+                .filter(b -> b.getStatus().equals(BookingStatus.APPROVED) &&
+                        Objects.equals(b.getItem().getUser().getId(), userId) &&
+                        Objects.equals(b.getItem().getId(), item.getId()) &&
+                        b.getStart().isAfter(now) || b.getStart().isEqual(now))
                 .findFirst();
 
         ItemDetailsDto dto = ItemDtoMapper.toItemDetailsDto(item);
