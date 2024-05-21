@@ -13,23 +13,21 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "items")
-public class Item {
+@Table(name = "comments")
+public class Comment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column
-    private String name;
-
-    @Column
-    private String description;
+    private String text;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "item_id", nullable = false)
+    private Item item;
 
-    @Column
-    private Boolean available;
+    @OneToOne
+    @JoinColumn(name = "author_id", nullable = false)
+    private User author;
 }

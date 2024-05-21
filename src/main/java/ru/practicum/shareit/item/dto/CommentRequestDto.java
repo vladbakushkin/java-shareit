@@ -4,23 +4,23 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.user.model.User;
 
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ItemDto {
+public class CommentRequestDto {
+
     private Long id;
 
     @NotBlank
-    private String name;
+    private String text;
 
-    @NotBlank
-    private String description;
+    private Item item;
 
-    @NotNull
-    private Boolean available;
+    private User author;
 }

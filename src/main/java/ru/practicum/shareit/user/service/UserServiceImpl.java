@@ -2,18 +2,15 @@ package ru.practicum.shareit.user.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.exception.AlreadyExistsException;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.user.dto.NewUserDto;
-import ru.practicum.shareit.user.dto.NewUserDtoMapper;
-import ru.practicum.shareit.user.dto.UpdateUserDto;
-import ru.practicum.shareit.user.dto.UpdateUserDtoMapper;
+import ru.practicum.shareit.user.dto.UserNewDto;
+import ru.practicum.shareit.user.dto.UserResponseDto;
+import ru.practicum.shareit.user.dto.UserUpdateDto;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
+import ru.practicum.shareit.utility.UserDtoMapper;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -21,72 +18,49 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
-    private final NewUserDtoMapper newUserDtoMapper = new NewUserDtoMapper();
-    private final UpdateUserDtoMapper updateUserDtoMapper = new UpdateUserDtoMapper();
-
     @Override
-    public NewUserDto saveUser(NewUserDto newUserDto) {
-        User user = newUserDtoMapper.toUser(newUserDto);
-
-        checkUserEmailInStorage(user);
-
+    public UserResponseDto saveUser(UserNewDto userNewDto) {
+        User user = UserDtoMapper.toUser(userNewDto);
         User savedUser = userRepository.save(user);
-
-        return newUserDtoMapper.toDto(savedUser);
+        return UserDtoMapper.toDto(savedUser);
     }
 
     @Override
-    public UpdateUserDto updateUser(Long userId, UpdateUserDto updateUserDto) {
-        User user = updateUserDtoMapper.toUser(updateUserDto);
-        user.setId(userId);
+    public UserResponseDto updateUser(Long userId, UserUpdateDto userUpdateDto) {
+        User user = UserDtoMapper.toUser(userUpdateDto);
 
-        User userToUpdate = userRepository.findUserById(userId);
-        if (userToUpdate == null) {
-            throw new NotFoundException("User with id = " + userId + " not found");
-        }
+        User userToUpdate = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User with id = " + userId + " not found"));
 
         if (user.getName() != null) {
             userToUpdate.setName(user.getName());
         }
+
         if (user.getEmail() != null) {
-            checkUserEmailInStorage(user);
             userToUpdate.setEmail(user.getEmail());
         }
 
-        User updatedUser = userRepository.update(userId, userToUpdate);
-        return updateUserDtoMapper.toDto(updatedUser);
+        User updatedUser = userRepository.save(userToUpdate);
+        return UserDtoMapper.toDto(updatedUser);
     }
 
     @Override
-    public NewUserDto getUser(Long userId) {
-        User user = userRepository.findUserById(userId);
-        if (user == null) {
-            throw new NotFoundException("User with id = " + userId + " not found");
-        }
-        return newUserDtoMapper.toDto(user);
+    public UserResponseDto getUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User with id = " + userId + " not found"));
+        return UserDtoMapper.toDto(user);
     }
 
     @Override
-    public List<NewUserDto> getAllUsers() {
+    public List<UserResponseDto> getAllUsers() {
+        // возможно стоит добавить пагинацию
         return userRepository.findAll().stream()
-                .map(newUserDtoMapper::toDto)
+                .map(UserDtoMapper::toDto)
                 .collect(Collectors.toList());
     }
 
     @Override
     public void deleteUser(Long id) {
-        userRepository.deleteUserById(id);
-    }
-
-    private void checkUserEmailInStorage(User user) {
-        Optional<User> foundUser = userRepository.findAll().stream()
-                .filter(savedUser -> savedUser.getEmail().equalsIgnoreCase(user.getEmail()))
-                .findFirst();
-
-        foundUser.ifPresent(existingUser -> {
-            if (!Objects.equals(user.getId(), existingUser.getId())) {
-                throw new AlreadyExistsException("User already exists");
-            }
-        });
+        userRepository.deleteById(id);
     }
 }

@@ -6,16 +6,18 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.dto.UpdateItemDto;
+import ru.practicum.shareit.booking.repository.BookingRepository;
+import ru.practicum.shareit.item.dto.ItemDetailsDto;
+import ru.practicum.shareit.item.dto.ItemRequestDto;
+import ru.practicum.shareit.item.dto.ItemUpdateDto;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
-import ru.practicum.shareit.user.dto.NewUserDto;
-import ru.practicum.shareit.user.dto.NewUserDtoMapper;
 import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.user.service.UserService;
+import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -29,29 +31,37 @@ class ItemServiceImplTest {
     private ItemRepository itemRepository;
 
     @Mock
-    private UserService userService;
+    private UserRepository userRepository;
+
+    @Mock
+    private BookingRepository bookingRepository;
+
+    @Mock
+    private CommentRepository commentRepository;
 
     @InjectMocks
     private ItemServiceImpl itemService;
 
     Item addedItem;
     Item updatedItem;
+    User user;
 
     @BeforeEach
     void setUp() {
-        addedItem = new Item(1L, "Item", "Description", 1L, true);
-        updatedItem = new Item(1L, "Updated Item", "Updated Description", 1L, false);
+        user = new User(1L, "user@email.com", "username");
+        addedItem = new Item(1L, "Item", "Description", user, true);
+        updatedItem = new Item(1L, "Updated Item", "Updated Description", user, false);
     }
 
     @Test
     void addItem_Valid_ReturnItem() {
         // given
-        ItemDto itemToAdd = createItemDto();
-        when(itemRepository.save(any(Long.class), any(Item.class))).thenReturn(addedItem);
-        when(userService.getUser(any(Long.class))).thenReturn(createNewUserDto());
+        ItemRequestDto itemToAdd = createItemDto();
+        when(itemRepository.save(any(Item.class))).thenReturn(addedItem);
+        when(userRepository.findById(any(Long.class))).thenReturn(Optional.ofNullable(user));
 
         // when
-        ItemDto addedItem = itemService.addItem(1L, itemToAdd);
+        ItemDetailsDto addedItem = itemService.addItem(1L, itemToAdd);
 
         // then
         assertNotNull(addedItem);
@@ -63,13 +73,13 @@ class ItemServiceImplTest {
     @Test
     void updateItem_Valid_ReturnItem() {
         // given
-        UpdateItemDto itemToUpdate = createUpdateItemDto();
-        when(itemRepository.update(any(Long.class), any(Long.class), any(Item.class))).thenReturn(updatedItem);
-        when(userService.getUser(any(Long.class))).thenReturn(createNewUserDto());
-        when(itemRepository.findItemById(any(Long.class))).thenReturn(updatedItem);
+        ItemUpdateDto itemToUpdate = createUpdateItemDto();
+        when(itemRepository.save(any(Item.class))).thenReturn(updatedItem);
+        when(userRepository.findById(any(Long.class))).thenReturn(Optional.ofNullable(user));
+        when(itemRepository.findById(any(Long.class))).thenReturn(Optional.ofNullable(updatedItem));
 
         // when
-        UpdateItemDto updatedItem = itemService.updateItem(1L, 1L, itemToUpdate);
+        ItemDetailsDto updatedItem = itemService.updateItem(1L, 1L, itemToUpdate);
 
         // then
         assertNotNull(updatedItem);
@@ -82,11 +92,11 @@ class ItemServiceImplTest {
     @Test
     void getItem_Valid_ReturnItem() {
         // given
-        ItemDto itemToGet = createItemDto();
-        when(itemRepository.findItemById(any(Long.class))).thenReturn(addedItem);
+        ItemDetailsDto itemToGet = createItemDetailsDto();
+        when(itemRepository.findById(any(Long.class))).thenReturn(Optional.ofNullable(addedItem));
 
         // when
-        ItemDto addedItem = itemService.getItem(1L);
+        ItemDetailsDto addedItem = itemService.getItem(1L, 1L);
 
         // then
         assertNotNull(addedItem);
@@ -98,12 +108,12 @@ class ItemServiceImplTest {
     @Test
     void getAllItemsByOwner_Valid_ReturnItems() {
         // given
-        ItemDto itemToGet1 = createItemDto();
-        UpdateItemDto itemToGet2 = createUpdateItemDto();
-        when(itemRepository.findAllItemsByUserId(any(Long.class))).thenReturn(List.of(addedItem, updatedItem));
+        ItemDetailsDto itemToGet1 = createItemDetailsDto();
+        ItemDetailsDto itemToGet2 = createItemDetailsDto();
+        when(itemRepository.findAllByUserId(any(Long.class))).thenReturn(List.of(addedItem, addedItem));
 
         // when
-        List<ItemDto> items = itemService.getAllItemsByOwner(1L);
+        List<ItemDetailsDto> items = itemService.getAllItemsByOwner(1L);
 
         // then
         assertNotNull(items);
@@ -118,11 +128,11 @@ class ItemServiceImplTest {
     @Test
     void searchAvailableItem_Valid_ReturnItems() {
         // given
-        ItemDto itemToSearch = createItemDto();
+        ItemRequestDto itemToSearch = createItemDto();
         when(itemRepository.searchAvailableItem(any(String.class))).thenReturn(List.of(addedItem));
 
         // when
-        List<ItemDto> availableItems = itemService.searchAvailableItem("sCripT");
+        List<ItemDetailsDto> availableItems = itemService.searchAvailableItem("sCripT");
 
         // then
         assertNotNull(availableItems);
@@ -131,8 +141,8 @@ class ItemServiceImplTest {
         assertEquals(itemToSearch.getAvailable(), availableItems.get(0).getAvailable());
     }
 
-    private ItemDto createItemDto() {
-        return ItemDto.builder()
+    private ItemRequestDto createItemDto() {
+        return ItemRequestDto.builder()
                 .id(1L)
                 .name("Item")
                 .description("Description")
@@ -140,8 +150,8 @@ class ItemServiceImplTest {
                 .build();
     }
 
-    private UpdateItemDto createUpdateItemDto() {
-        return UpdateItemDto.builder()
+    private ItemUpdateDto createUpdateItemDto() {
+        return ItemUpdateDto.builder()
                 .id(1L)
                 .name("Updated Item")
                 .description("Updated Description")
@@ -149,12 +159,12 @@ class ItemServiceImplTest {
                 .build();
     }
 
-    private NewUserDto createNewUserDto() {
-        NewUserDtoMapper newUserDtoMapper = new NewUserDtoMapper();
-        User user = new User();
-        user.setId(1L);
-        user.setName("User");
-        user.setEmail("user@email.com");
-        return newUserDtoMapper.toDto(user);
+    private ItemDetailsDto createItemDetailsDto() {
+        return ItemDetailsDto.builder()
+                .id(1L)
+                .name("Item")
+                .description("Description")
+                .available(true)
+                .build();
     }
 }
