@@ -13,6 +13,7 @@ import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.request.repository.ItemRequestRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 import ru.practicum.shareit.utility.BookingDtoMapper;
@@ -31,15 +32,22 @@ public class ItemServiceImpl implements ItemService {
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
+    private final ItemRequestRepository itemRequestRepository;
 
     @Override
     public ItemDetailsDto addItem(Long userId, ItemRequestDto itemRequestDto) {
         Item item = ItemDtoMapper.toItem(itemRequestDto);
 
+        if (itemRequestDto.getRequestId() != null) {
+            itemRequestRepository.findById(itemRequestDto.getRequestId())
+                    .orElseThrow(() -> new NotFoundException("Request with id = " + itemRequestDto.getRequestId() + " not found"));
+            item.setRequestId(itemRequestDto.getRequestId());
+        }
+
         User owner = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User with id = " + userId + " not found"));
-
         item.setUser(owner);
+
         Item savedItem = itemRepository.save(item);
         return ItemDtoMapper.toItemDetailsDto(savedItem);
     }
