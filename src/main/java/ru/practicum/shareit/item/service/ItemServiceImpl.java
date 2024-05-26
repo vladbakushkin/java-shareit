@@ -2,6 +2,8 @@ package ru.practicum.shareit.item.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
@@ -93,8 +95,17 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemDetailsDto> getAllItemsByOwner(Long userId) {
-        List<Item> items = itemRepository.findAllByUserId(userId);
+    public List<ItemDetailsDto> getAllItemsByOwner(Long userId, Integer from, Integer size) {
+        if (from < 0 || size <= 0) {
+            throw new BadRequestException("'size' must be > 0 and 'from' must be >= 0. " +
+                    "size = " + size + ", from = " + from);
+        }
+
+        int page = from / size;
+        Pageable pageable = PageRequest.of(page, size);
+
+
+        List<Item> items = itemRepository.findAllByUserId(userId, pageable);
 
         List<Booking> bookingsForItems = bookingRepository.findAllByItemInOrderByEndDesc(items);
 
@@ -106,11 +117,19 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemDetailsDto> searchAvailableItem(String text) {
+    public List<ItemDetailsDto> searchAvailableItem(String text, Integer from, Integer size) {
         if (text.isBlank()) {
             return new ArrayList<>();
         }
-        return itemRepository.searchAvailableItem(text).stream()
+        if (from < 0 || size <= 0) {
+            throw new BadRequestException("'size' must be > 0 and 'from' must be >= 0. " +
+                    "size = " + size + ", from = " + from);
+        }
+
+        int page = from / size;
+        Pageable pageable = PageRequest.of(page, size);
+
+        return itemRepository.searchAvailableItem(text, pageable).stream()
                 .map(ItemDtoMapper::toItemDetailsDto)
                 .collect(Collectors.toList());
     }

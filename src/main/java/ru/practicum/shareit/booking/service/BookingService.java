@@ -14,7 +14,7 @@ public interface BookingService {
 
     BookingResponseDto getBooking(Long userId, Long bookingId);
 
-    List<BookingResponseDto> getAllBookingsForUser(Long userId, BookingState state);
+    List<BookingResponseDto> getAllBookingsForUser(Long userId, BookingState state, Integer from, Integer size);
 
-    List<BookingResponseDto> getAllBookingsForUserItems(Long userId, BookingState state);
+    List<BookingResponseDto> getAllBookingsForUserItems(Long userId, BookingState state, Integer from, Integer size);
 }

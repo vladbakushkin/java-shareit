@@ -2,6 +2,8 @@ package ru.practicum.shareit.booking.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.dto.BookingRequestDto;
 import ru.practicum.shareit.booking.dto.BookingResponseDto;
@@ -97,35 +99,45 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingResponseDto> getAllBookingsForUser(Long userId, BookingState state) {
+    public List<BookingResponseDto> getAllBookingsForUser(Long userId, BookingState state, Integer from, Integer size) {
+        LocalDateTime now = LocalDateTime.now();
+
         User booker = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User with id = " + userId + " not found"));
 
+        if (from < 0 || size <= 0) {
+            throw new BadRequestException("'size' must be > 0 and 'from' must be >= 0. " +
+                    "size = " + size + ", from = " + from);
+        }
+
+        int page = from / size;
+        Pageable pageable = PageRequest.of(page, size);
+
         List<Booking> bookingsForUser;
-        LocalDateTime now = LocalDateTime.now();
+
         switch (state) {
             case ALL:
-                bookingsForUser = bookingRepository.findAllByBookerIdOrderByStartDesc(booker.getId());
+                bookingsForUser = bookingRepository.findAllByBookerIdOrderByStartDesc(booker.getId(), pageable);
                 break;
             case CURRENT:
                 bookingsForUser = bookingRepository
-                        .findAllByBookerIdAndStartBeforeAndEndAfterOrderByStartDesc(booker.getId(), now, now);
+                        .findAllByBookerIdAndStartBeforeAndEndAfterOrderByStartDesc(booker.getId(), now, now, pageable);
                 break;
             case PAST:
                 bookingsForUser = bookingRepository
-                        .findAllByBookerIdAndEndBeforeOrderByStartDesc(booker.getId(), now);
+                        .findAllByBookerIdAndEndBeforeOrderByStartDesc(booker.getId(), now, pageable);
                 break;
             case FUTURE:
                 bookingsForUser = bookingRepository
-                        .findAllByBookerIdAndStartAfterOrderByStartDesc(booker.getId(), now);
+                        .findAllByBookerIdAndStartAfterOrderByStartDesc(booker.getId(), now, pageable);
                 break;
             case WAITING:
                 bookingsForUser = bookingRepository
-                        .findAllByBookerIdAndStatusOrderByStartDesc(booker.getId(), BookingStatus.WAITING);
+                        .findAllByBookerIdAndStatusOrderByStartDesc(booker.getId(), BookingStatus.WAITING, pageable);
                 break;
             case REJECTED:
                 bookingsForUser = bookingRepository
-                        .findAllByBookerIdAndStatusOrderByStartDesc(booker.getId(), BookingStatus.REJECTED);
+                        .findAllByBookerIdAndStatusOrderByStartDesc(booker.getId(), BookingStatus.REJECTED, pageable);
                 break;
             default:
                 throw new UnknownStateException(state.name());
@@ -135,36 +147,45 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingResponseDto> getAllBookingsForUserItems(Long userId, BookingState state) {
+    public List<BookingResponseDto> getAllBookingsForUserItems(Long userId, BookingState state, Integer from, Integer size) {
+        LocalDateTime now = LocalDateTime.now();
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User with id = " + userId + " not found"));
 
+        if (from < 0 || size <= 0) {
+            throw new BadRequestException("'size' must be > 0 and 'from' must be >= 0. " +
+                    "size = " + size + ", from = " + from);
+        }
+
+        int page = from / size;
+        Pageable pageable = PageRequest.of(page, size);
+
         List<Booking> bookingsForUserItems;
-        LocalDateTime now = LocalDateTime.now();
         switch (state) {
             case ALL:
                 bookingsForUserItems = bookingRepository
-                        .findAllBookingsForUserItemsOrderByStartDesc(user.getId());
+                        .findAllBookingsForUserItemsOrderByStartDesc(user.getId(), pageable);
                 break;
             case CURRENT:
                 bookingsForUserItems = bookingRepository
-                        .findAllBookingsForUserItemsWhereStartBeforeAndEndAfterOrderByStartDesc(user.getId(), now, now);
+                        .findAllBookingsForUserItemsWhereStartBeforeAndEndAfterOrderByStartDesc(user.getId(), now, now, pageable);
                 break;
             case PAST:
                 bookingsForUserItems = bookingRepository
-                        .findAllBookingsForUserItemsWhereEndBeforeOrderByStartDesc(user.getId(), now);
+                        .findAllBookingsForUserItemsWhereEndBeforeOrderByStartDesc(user.getId(), now, pageable);
                 break;
             case FUTURE:
                 bookingsForUserItems = bookingRepository
-                        .findAllBookingsForUserItemsWhereStartAfterOrderByStartDesc(user.getId(), now);
+                        .findAllBookingsForUserItemsWhereStartAfterOrderByStartDesc(user.getId(), now, pageable);
                 break;
             case WAITING:
                 bookingsForUserItems = bookingRepository
-                        .findAllBookingsForUserItemsByStatusOrderByStartDesc(user.getId(), BookingStatus.WAITING);
+                        .findAllBookingsForUserItemsByStatusOrderByStartDesc(user.getId(), BookingStatus.WAITING, pageable);
                 break;
             case REJECTED:
                 bookingsForUserItems = bookingRepository
-                        .findAllBookingsForUserItemsByStatusOrderByStartDesc(user.getId(), BookingStatus.REJECTED);
+                        .findAllBookingsForUserItemsByStatusOrderByStartDesc(user.getId(), BookingStatus.REJECTED, pageable);
                 break;
             default:
                 throw new UnknownStateException(state.name());

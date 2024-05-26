@@ -13,7 +13,7 @@ public interface UserService {
 
     UserResponseDto getUser(Long id);
 
-    List<UserResponseDto> getAllUsers();
+    List<UserResponseDto> getAllUsers(Integer from, Integer size);
 
     void deleteUser(Long id);
 }

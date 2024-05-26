@@ -63,7 +63,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         int page = from / size;
         Pageable pageable = PageRequest.of(page, size);
 
-        List<ItemRequest> itemRequests = itemRequestRepository.findAllByOwnerIdNot(pageable, userId).getContent();
+        List<ItemRequest> itemRequests = itemRequestRepository.findAllByOwnerIdNot(userId, pageable);
 
         List<Item> items = itemRepository.findAllByRequestIdIn(itemRequests.stream()
                 .map(ItemRequest::getId)
