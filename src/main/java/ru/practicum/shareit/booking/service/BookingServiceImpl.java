@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.dto.BookingRequestDto;
 import ru.practicum.shareit.booking.dto.BookingResponseDto;
@@ -111,33 +112,34 @@ public class BookingServiceImpl implements BookingService {
         }
 
         int page = from / size;
-        Pageable pageable = PageRequest.of(page, size);
+        Sort sort = Sort.by(Sort.Direction.DESC, "start");
+        Pageable pageable = PageRequest.of(page, size, sort);
 
         List<Booking> bookingsForUser;
 
         switch (state) {
             case ALL:
-                bookingsForUser = bookingRepository.findAllByBookerIdOrderByStartDesc(booker.getId(), pageable);
+                bookingsForUser = bookingRepository.findAllByBookerId(booker.getId(), pageable);
                 break;
             case CURRENT:
                 bookingsForUser = bookingRepository
-                        .findAllByBookerIdAndStartBeforeAndEndAfterOrderByStartDesc(booker.getId(), now, now, pageable);
+                        .findAllByBookerIdAndStartBeforeAndEndAfter(booker.getId(), now, now, pageable);
                 break;
             case PAST:
                 bookingsForUser = bookingRepository
-                        .findAllByBookerIdAndEndBeforeOrderByStartDesc(booker.getId(), now, pageable);
+                        .findAllByBookerIdAndEndBefore(booker.getId(), now, pageable);
                 break;
             case FUTURE:
                 bookingsForUser = bookingRepository
-                        .findAllByBookerIdAndStartAfterOrderByStartDesc(booker.getId(), now, pageable);
+                        .findAllByBookerIdAndStartAfter(booker.getId(), now, pageable);
                 break;
             case WAITING:
                 bookingsForUser = bookingRepository
-                        .findAllByBookerIdAndStatusOrderByStartDesc(booker.getId(), BookingStatus.WAITING, pageable);
+                        .findAllByBookerIdAndStatus(booker.getId(), BookingStatus.WAITING, pageable);
                 break;
             case REJECTED:
                 bookingsForUser = bookingRepository
-                        .findAllByBookerIdAndStatusOrderByStartDesc(booker.getId(), BookingStatus.REJECTED, pageable);
+                        .findAllByBookerIdAndStatus(booker.getId(), BookingStatus.REJECTED, pageable);
                 break;
             default:
                 throw new UnknownStateException(state.name());
@@ -159,33 +161,34 @@ public class BookingServiceImpl implements BookingService {
         }
 
         int page = from / size;
-        Pageable pageable = PageRequest.of(page, size);
+        Sort sort = Sort.by(Sort.Direction.DESC, "start");
+        Pageable pageable = PageRequest.of(page, size, sort);
 
         List<Booking> bookingsForUserItems;
         switch (state) {
             case ALL:
                 bookingsForUserItems = bookingRepository
-                        .findAllBookingsForUserItemsOrderByStartDesc(user.getId(), pageable);
+                        .findAllBookingsByItem_UserId(user.getId(), pageable);
                 break;
             case CURRENT:
                 bookingsForUserItems = bookingRepository
-                        .findAllBookingsForUserItemsWhereStartBeforeAndEndAfterOrderByStartDesc(user.getId(), now, now, pageable);
+                        .findAllBookingsByItem_UserIdAndStartBeforeAndEndAfter(user.getId(), now, now, pageable);
                 break;
             case PAST:
                 bookingsForUserItems = bookingRepository
-                        .findAllBookingsForUserItemsWhereEndBeforeOrderByStartDesc(user.getId(), now, pageable);
+                        .findAllBookingsByItem_UserIdAndEndBefore(user.getId(), now, pageable);
                 break;
             case FUTURE:
                 bookingsForUserItems = bookingRepository
-                        .findAllBookingsForUserItemsWhereStartAfterOrderByStartDesc(user.getId(), now, pageable);
+                        .findAllBookingsByItem_UserIdAndStartAfter(user.getId(), now, pageable);
                 break;
             case WAITING:
                 bookingsForUserItems = bookingRepository
-                        .findAllBookingsForUserItemsByStatusOrderByStartDesc(user.getId(), BookingStatus.WAITING, pageable);
+                        .findAllBookingsByItem_UserIdAndStatus(user.getId(), BookingStatus.WAITING, pageable);
                 break;
             case REJECTED:
                 bookingsForUserItems = bookingRepository
-                        .findAllBookingsForUserItemsByStatusOrderByStartDesc(user.getId(), BookingStatus.REJECTED, pageable);
+                        .findAllBookingsByItem_UserIdAndStatus(user.getId(), BookingStatus.REJECTED, pageable);
                 break;
             default:
                 throw new UnknownStateException(state.name());
