@@ -31,15 +31,6 @@ public class ErrorHandler {
                 e.getMessage());
     }
 
-    @ExceptionHandler(AlreadyExistsException.class)
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public ErrorResponse handleAlreadyExistException(final AlreadyExistsException e) {
-        return new ErrorResponse(
-                409,
-                "Conflict",
-                e.getMessage());
-    }
-
     @ExceptionHandler(BadRequestException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleBadRequestException(final BadRequestException e) {
