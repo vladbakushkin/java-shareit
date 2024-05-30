@@ -8,14 +8,16 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import ru.practicum.shareit.item.dto.ItemDetailsDto;
-import ru.practicum.shareit.item.dto.ItemRequestDto;
-import ru.practicum.shareit.item.dto.ItemUpdateDto;
+import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.item.dto.*;
+import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.service.ItemService;
+import ru.practicum.shareit.user.model.User;
 
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -55,6 +57,57 @@ class ItemControllerTest {
     }
 
     @Test
+    void addItem_nameIsBlank_ThrowsBadRequestException() throws Exception {
+        // given
+        ItemRequestDto itemRequestDto = new ItemRequestDto();
+        itemRequestDto.setName("");
+        itemRequestDto.setDescription("Description");
+        itemRequestDto.setAvailable(true);
+
+        // then
+        mockMvc.perform(
+                        post("/items")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header("X-Sharer-User-Id", 1)
+                                .content(objectMapper.writeValueAsString(itemRequestDto)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void addItem_descriptionIsBlank_ThrowsBadRequestException() throws Exception {
+        // given
+        ItemRequestDto itemRequestDto = new ItemRequestDto();
+        itemRequestDto.setName("name");
+        itemRequestDto.setDescription("");
+        itemRequestDto.setAvailable(true);
+
+        // then
+        mockMvc.perform(
+                        post("/items")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header("X-Sharer-User-Id", 1)
+                                .content(objectMapper.writeValueAsString(itemRequestDto)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void addItem_availableIsNull_ThrowsBadRequestException() throws Exception {
+        // given
+        ItemRequestDto itemRequestDto = new ItemRequestDto();
+        itemRequestDto.setName("name");
+        itemRequestDto.setDescription("description");
+        itemRequestDto.setAvailable(null);
+
+        // then
+        mockMvc.perform(
+                        post("/items")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header("X-Sharer-User-Id", 1)
+                                .content(objectMapper.writeValueAsString(itemRequestDto)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void updateItem_RequestIsValid_ReturnItem() throws Exception {
         // given
         ItemDetailsDto itemDetailsDto = createItemDetailsDto();
@@ -76,7 +129,7 @@ class ItemControllerTest {
     }
 
     @Test
-    void getItem() throws Exception {
+    void getItem_valid_ReturnsItem() throws Exception {
         // given
         ItemDetailsDto itemDetailsDto = createItemDetailsDto();
 
@@ -95,6 +148,21 @@ class ItemControllerTest {
     }
 
     @Test
+    void getItem_wrongItemId_ThrowsNotFoundException() throws Exception {
+        // given
+        long itemId = 99L;
+
+        when(itemService.getItem(any(Long.class), any(Long.class))).thenThrow(NotFoundException.class);
+
+        // then
+        mockMvc.perform(
+                        get("/items/{itemId}", itemId)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header("X-Sharer-User-Id", 1))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void getAllItemsByOwner() throws Exception {
         // given
         ItemDetailsDto itemDetailsDto1 = createItemDetailsDto();
@@ -104,7 +172,8 @@ class ItemControllerTest {
         itemDetailsDto2.setAvailable(false);
 
         // when
-        when(itemService.getAllItemsByOwner(any(Long.class))).thenReturn(List.of(itemDetailsDto1, itemDetailsDto2));
+        when(itemService.getAllItemsByOwner(any(Long.class), any(Integer.class), any(Integer.class)))
+                .thenReturn(List.of(itemDetailsDto1, itemDetailsDto2));
 
         // then
         mockMvc.perform(
@@ -130,7 +199,8 @@ class ItemControllerTest {
         itemDetailsDto2.setAvailable(false);
 
         // when
-        when(itemService.searchAvailableItem(any(String.class))).thenReturn(List.of(itemDetailsDto1, itemDetailsDto2));
+        when(itemService.searchAvailableItem(any(String.class), any(Integer.class), any(Integer.class)))
+                .thenReturn(List.of(itemDetailsDto1, itemDetailsDto2));
 
         // then
         mockMvc.perform(
@@ -146,12 +216,66 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$[1].available").value("false"));
     }
 
+    @Test
+    void addComment_requestIsValid_ReturnsComment() throws Exception {
+        // given
+        CommentRequestDto commentRequestDto = createCommentRequestDto();
+        commentRequestDto.setText("text");
+        User author = new User(1L, "email", "name");
+        commentRequestDto.setAuthor(author);
+
+        CommentResponseDto commentResponseDto = new CommentResponseDto();
+        commentResponseDto.setId(1L);
+        commentResponseDto.setAuthorName(commentRequestDto.getAuthor().getName());
+        commentResponseDto.setText(commentRequestDto.getText());
+
+        // when
+        when(itemService.addComment(anyLong(), anyLong(), any(CommentRequestDto.class)))
+                .thenReturn(commentResponseDto);
+
+        // then
+        mockMvc.perform(
+                        post("/items/1/comment")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header("X-Sharer-User-Id", 1)
+                                .content(objectMapper.writeValueAsString(commentResponseDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").isNotEmpty())
+                .andExpect(jsonPath("$.text").value(commentResponseDto.getText()))
+                .andExpect(jsonPath("$.authorName").value(commentResponseDto.getAuthorName()))
+                .andExpect(jsonPath("$.created").value(commentResponseDto.getCreated()));
+    }
+
+    @Test
+    void addComment_textIsBlank_ThrowsBadRequestException() throws Exception {
+        // given
+        CommentRequestDto commentRequestDto = createCommentRequestDto();
+        commentRequestDto.setText("");
+        User author = new User(1L, "email", "name");
+        commentRequestDto.setAuthor(author);
+
+        // then
+        mockMvc.perform(
+                        post("/items/1/comment")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header("X-Sharer-User-Id", 1)
+                                .content(objectMapper.writeValueAsString(commentRequestDto)))
+                .andExpect(status().isBadRequest());
+    }
+
     private ItemDetailsDto createItemDetailsDto() {
         return ItemDetailsDto.builder()
                 .id(1L)
                 .name("Item")
                 .description("Description")
                 .available(true)
+                .build();
+    }
+
+    private CommentRequestDto createCommentRequestDto() {
+        return CommentRequestDto.builder()
+                .id(1L)
+                .item(new Item())
                 .build();
     }
 }

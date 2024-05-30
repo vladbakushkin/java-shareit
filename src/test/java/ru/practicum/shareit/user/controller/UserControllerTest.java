@@ -8,6 +8,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.dto.UserNewDto;
 import ru.practicum.shareit.user.dto.UserResponseDto;
 import ru.practicum.shareit.user.dto.UserUpdateDto;
@@ -16,6 +17,7 @@ import ru.practicum.shareit.user.service.UserService;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -54,6 +56,21 @@ class UserControllerTest {
     }
 
     @Test
+    void saveUser_EmailInvalid_ThrowsMethodArgumentNotValidException() throws Exception {
+        // given
+        UserNewDto userNewDto = new UserNewDto();
+        userNewDto.setName("name");
+        userNewDto.setEmail("user.email.com");
+
+        // then
+        mockMvc.perform(
+                        post("/users")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(userNewDto)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void updateUser_RequestIsValid_ReturnUser() throws Exception {
         // given
         UserResponseDto userResponseDto = createUserResponseDto();
@@ -72,7 +89,7 @@ class UserControllerTest {
     }
 
     @Test
-    void getUser() throws Exception {
+    void getUser_valid_ReturnsUserDto() throws Exception {
         // given
         UserResponseDto userResponseDto = createUserResponseDto();
 
@@ -89,6 +106,21 @@ class UserControllerTest {
     }
 
     @Test
+    void getUser_wrongUserId_ThrowsNotFoundException() throws Exception {
+        // given
+        long userId = 99L;
+
+        // when
+        when(userService.getUser(anyLong())).thenThrow(NotFoundException.class);
+
+        // then
+        mockMvc.perform(
+                        get("/users/{userId}", userId)
+                                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void getAllUsers() throws Exception {
         // given
         UserResponseDto userResponseDto1 = createUserResponseDto();
@@ -96,7 +128,8 @@ class UserControllerTest {
         userResponseDto2.setEmail("user2@email.com");
 
         // when
-        when(userService.getAllUsers()).thenReturn(List.of(userResponseDto1, userResponseDto2));
+        when(userService.getAllUsers(any(Integer.class), any(Integer.class)))
+                .thenReturn(List.of(userResponseDto1, userResponseDto2));
 
         // then
         mockMvc.perform(
