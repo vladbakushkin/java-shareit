@@ -153,25 +153,13 @@ class UserServiceImplTest {
     }
 
     @Test
-    void getMyRequests_ArgumentFromIsInvalid_ThrowsBadRequestException() {
-        // given
-        int from = -1;
-        int size = 10;
-
+    void getMyRequests_pageArgumentsWrong_ThrowsBadRequestException() {
         // then
         assertThrows(BadRequestException.class,
-                () -> userService.getAllUsers(from, size));
-    }
+                () -> userService.getAllUsers(-1, 10));
 
-    @Test
-    void getMyRequests_ArgumentSizeIsInvalid_ThrowsBadRequestException() {
-        // given
-        int from = 0;
-        int size = 0;
-
-        // then
         assertThrows(BadRequestException.class,
-                () -> userService.getAllUsers(from, size));
+                () -> userService.getAllUsers(0, 0));
     }
 
     @Test

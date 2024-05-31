@@ -87,27 +87,13 @@ class ItemRequestServiceImplTest {
     }
 
     @Test
-    void getMyRequests_ArgumentFromIsInvalid_ThrowsBadRequestException() {
-        // given
-        int from = -1;
-        int size = 10;
-        Long userId = 1L;
-
+    void getMyRequests_pageArgumentsWrong_ThrowsBadRequestException() {
         // then
         assertThrows(BadRequestException.class,
-                () -> itemRequestService.getAllRequests(userId, from, size));
-    }
+                () -> itemRequestService.getAllRequests(1L, -1, 10));
 
-    @Test
-    void getMyRequests_ArgumentSizeIsInvalid_ThrowsBadRequestException() {
-        // given
-        int from = 5;
-        int size = 0;
-        Long userId = 1L;
-
-        // then
         assertThrows(BadRequestException.class,
-                () -> itemRequestService.getAllRequests(userId, from, size));
+                () -> itemRequestService.getAllRequests(1L, 5, 0));
     }
 
     @Test

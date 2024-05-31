@@ -263,27 +263,12 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void getAllItemsByOwner_ArgumentFromIsInvalid_ThrowsBadRequestException() {
-        // given
-        int from = -1;
-        int size = 10;
-        long userId = 1;
-
+    void getAllItemsByOwner_pageArgumentsWrong_ThrowsBadRequestException() {
         // then
         assertThrows(BadRequestException.class,
-                () -> itemService.getAllItemsByOwner(userId, from, size));
-    }
-
-    @Test
-    void getAllItemsByOwner_ArgumentSizeIsInvalid_ThrowsBadRequestException() {
-        // given
-        int from = 0;
-        int size = 0;
-        long userId = 1;
-
-        // then
+                () -> itemService.getAllItemsByOwner(1L, -1, 10));
         assertThrows(BadRequestException.class,
-                () -> itemService.getAllItemsByOwner(userId, from, size));
+                () -> itemService.getAllItemsByOwner(1L, 0, 0));
     }
 
     @Test
@@ -314,25 +299,13 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void searchAvailableItem_ArgumentFromIsInvalid_ThrowsBadRequestException() {
-        // given
-        int from = -1;
-        int size = 10;
-
+    void searchAvailableItem_pageArgumentsWrong_ThrowsBadRequestException() {
         // then
         assertThrows(BadRequestException.class,
-                () -> itemService.searchAvailableItem("item", from, size));
-    }
+                () -> itemService.searchAvailableItem("item", -1, 10));
 
-    @Test
-    void searchAvailableItem_ArgumentSizeIsInvalid_ThrowsBadRequestException() {
-        // given
-        int from = 0;
-        int size = 0;
-
-        // then
         assertThrows(BadRequestException.class,
-                () -> itemService.searchAvailableItem("item", from, size));
+                () -> itemService.searchAvailableItem("item", 0, 0));
     }
 
     @Test

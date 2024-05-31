@@ -26,7 +26,7 @@ import static org.hamcrest.Matchers.notNullValue;
 @Transactional
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @SpringBootTest
-public class ItemServiceIntegrationTest {
+class ItemServiceIntegrationTest {
 
     @Autowired
     private ItemService itemService;

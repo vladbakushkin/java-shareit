@@ -689,21 +689,13 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void getAllBookings_fromLessZero_ThrowsBadRequestException() {
+    void getAllBookings_pageArgumentsWrong_ThrowsBadRequestException() {
         // given
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(new User()));
 
         // then
         assertThrows(BadRequestException.class,
                 () -> bookingService.getAllBookings(1L, BookingState.WAITING, "path", -1, 10));
-    }
-
-    @Test
-    void getAllBookings_sizeLessZero_ThrowsBadRequestException() {
-        // given
-        when(userRepository.findById(anyLong())).thenReturn(Optional.of(new User()));
-
-        // then
         assertThrows(BadRequestException.class,
                 () -> bookingService.getAllBookings(1L, BookingState.WAITING, "path", 0, -1));
     }

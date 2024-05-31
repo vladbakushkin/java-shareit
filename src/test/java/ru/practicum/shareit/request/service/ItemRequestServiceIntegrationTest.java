@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @Transactional
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @SpringBootTest
-public class ItemRequestServiceIntegrationTest {
+class ItemRequestServiceIntegrationTest {
 
     @Autowired
     private ItemRequestService itemRequestService;
@@ -31,7 +31,7 @@ public class ItemRequestServiceIntegrationTest {
     private ItemRequestRepository itemRequestRepository;
 
     @Test
-    public void getAllRequestsTest() {
+    void getAllRequestsTest() {
         // given
         User user1 = new User();
         user1.setName("name1");
