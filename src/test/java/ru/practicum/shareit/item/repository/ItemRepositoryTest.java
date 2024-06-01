@@ -23,10 +23,6 @@ class ItemRepositoryTest {
     private UserRepository userRepository;
 
     @Test
-    void findAllByUserId() {
-    }
-
-    @Test
     void searchAvailableItem() {
         User user = new User();
         user.setName("name");
@@ -52,13 +48,5 @@ class ItemRepositoryTest {
         });
         userRepository.delete(user);
         itemRepository.delete(itemToSave);
-    }
-
-    @Test
-    void findAllByRequestId() {
-    }
-
-    @Test
-    void findAllByRequestIdIn() {
     }
 }
