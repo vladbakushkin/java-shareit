@@ -36,8 +36,9 @@ public class UserController {
     }
 
     @GetMapping
-    public List<UserResponseDto> getAllUsers() {
-        return userService.getAllUsers();
+    public List<UserResponseDto> getAllUsers(@RequestParam(defaultValue = "0") Integer from,
+                                             @RequestParam(defaultValue = "10") Integer size) {
+        return userService.getAllUsers(from, size);
     }
 
     @DeleteMapping("/{userId}")

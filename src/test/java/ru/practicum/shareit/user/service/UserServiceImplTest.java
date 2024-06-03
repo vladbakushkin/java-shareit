@@ -6,6 +6,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import ru.practicum.shareit.exception.BadRequestException;
 import ru.practicum.shareit.user.dto.UserNewDto;
 import ru.practicum.shareit.user.dto.UserResponseDto;
 import ru.practicum.shareit.user.dto.UserUpdateDto;
@@ -15,8 +19,7 @@ import ru.practicum.shareit.user.repository.UserRepository;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -29,8 +32,8 @@ class UserServiceImplTest {
     @InjectMocks
     private UserServiceImpl userService;
 
-    User savedUser;
-    User updatedUser;
+    private User savedUser;
+    private User updatedUser;
 
     @BeforeEach
     void setUp() {
@@ -51,6 +54,7 @@ class UserServiceImplTest {
         assertNotNull(savedUser);
         assertEquals(userToSave.getName(), savedUser.getName());
         assertEquals(userToSave.getEmail(), savedUser.getEmail());
+        verify(userRepository).save(any(User.class));
     }
 
     @Test
@@ -67,6 +71,49 @@ class UserServiceImplTest {
         assertNotNull(updatedUser);
         assertEquals(userToUpdate.getName(), updatedUser.getName());
         assertEquals(userToUpdate.getEmail(), updatedUser.getEmail());
+        verify(userRepository).save(any(User.class));
+    }
+
+    @Test
+    void updateUser_WithoutNameValid_ReturnsUser() {
+        // given
+        User user = new User();
+        user.setId(1L);
+        user.setEmail("user@email.com");
+        UserUpdateDto userToUpdate = createUpdateUserDto();
+        userToUpdate.setName(null);
+        when(userRepository.save(any(User.class))).thenReturn(user);
+        when(userRepository.findById(any(Long.class))).thenReturn(Optional.ofNullable(updatedUser));
+
+        // when
+        UserResponseDto updatedUser = userService.updateUser(userToUpdate.getId(), userToUpdate);
+
+        // then
+        assertNotNull(updatedUser);
+        assertEquals(userToUpdate.getName(), updatedUser.getName());
+        assertEquals(userToUpdate.getEmail(), updatedUser.getEmail());
+        verify(userRepository).save(any(User.class));
+    }
+
+    @Test
+    void updateUser_WithoutEmailValid_ReturnsUser() {
+        // given
+        User user = new User();
+        user.setId(1L);
+        user.setName("New Name");
+        UserUpdateDto userToUpdate = createUpdateUserDto();
+        userToUpdate.setEmail(null);
+        when(userRepository.save(any(User.class))).thenReturn(user);
+        when(userRepository.findById(any(Long.class))).thenReturn(Optional.ofNullable(updatedUser));
+
+        // when
+        UserResponseDto updatedUser = userService.updateUser(userToUpdate.getId(), userToUpdate);
+
+        // then
+        assertNotNull(updatedUser);
+        assertEquals(userToUpdate.getName(), updatedUser.getName());
+        assertEquals(userToUpdate.getEmail(), updatedUser.getEmail());
+        verify(userRepository).save(any(User.class));
     }
 
     @Test
@@ -89,10 +136,11 @@ class UserServiceImplTest {
         // given
         UserNewDto newUserToGet = createNewUserDto();
         UserUpdateDto updateUserToGet = createUpdateUserDto();
-        when(userRepository.findAll()).thenReturn(List.of(savedUser, updatedUser));
+        Page<User> userPage = new PageImpl<>(List.of(savedUser, updatedUser));
+        when(userRepository.findAll(any(Pageable.class))).thenReturn(userPage);
 
         // when
-        List<UserResponseDto> users = userService.getAllUsers();
+        List<UserResponseDto> users = userService.getAllUsers(0, 10);
 
         // then
         assertNotNull(users);
@@ -102,6 +150,16 @@ class UserServiceImplTest {
 
         assertEquals(updateUserToGet.getName(), users.get(1).getName());
         assertEquals(updateUserToGet.getEmail(), users.get(1).getEmail());
+    }
+
+    @Test
+    void getMyRequests_pageArgumentsWrong_ThrowsBadRequestException() {
+        // then
+        assertThrows(BadRequestException.class,
+                () -> userService.getAllUsers(-1, 10));
+
+        assertThrows(BadRequestException.class,
+                () -> userService.getAllUsers(0, 0));
     }
 
     @Test
