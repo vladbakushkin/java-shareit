@@ -9,7 +9,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 @SpringBootTest
-class ShareItTests {
+class ShareItServerTests {
 
     @Autowired
     private ApplicationContext applicationContext;
@@ -17,8 +17,8 @@ class ShareItTests {
     @Test
     void contextLoads() {
         assertThat(applicationContext).isNotNull();
-        assertDoesNotThrow(ShareItApp::new);
-        assertDoesNotThrow(() -> ShareItApp.main(new String[]{}));
+        assertDoesNotThrow(ShareItServer::new);
+        assertDoesNotThrow(() -> ShareItServer.main(new String[]{}));
     }
 
 }
