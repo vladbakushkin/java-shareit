@@ -105,7 +105,7 @@ public class ItemServiceImpl implements ItemService {
         Pageable pageable = PageRequest.of(page, size);
 
 
-        List<Item> items = itemRepository.findAllByUserId(userId, pageable);
+        List<Item> items = itemRepository.findAllByUserIdOrderById(userId, pageable);
 
         List<Booking> bookingsForItems = bookingRepository.findAllByItemInOrderByEndDesc(items);
 

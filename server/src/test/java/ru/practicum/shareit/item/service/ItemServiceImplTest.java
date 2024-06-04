@@ -246,7 +246,7 @@ class ItemServiceImplTest {
         // given
         ItemDetailsDto itemToGet1 = createItemDetailsDto();
         ItemDetailsDto itemToGet2 = createItemDetailsDto();
-        when(itemRepository.findAllByUserId(any(Long.class), any(Pageable.class)))
+        when(itemRepository.findAllByUserIdOrderById(any(Long.class), any(Pageable.class)))
                 .thenReturn(List.of(addedItem, addedItem));
 
         // when
