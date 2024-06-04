@@ -4,11 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.exception.BadRequestException;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.user.dto.UserNewDto;
+import ru.practicum.shareit.user.dto.UserRequestDto;
 import ru.practicum.shareit.user.dto.UserResponseDto;
-import ru.practicum.shareit.user.dto.UserUpdateDto;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 import ru.practicum.shareit.utility.UserDtoMapper;
@@ -22,15 +20,15 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
     @Override
-    public UserResponseDto saveUser(UserNewDto userNewDto) {
-        User user = UserDtoMapper.toUser(userNewDto);
+    public UserResponseDto saveUser(UserRequestDto userRequestDto) {
+        User user = UserDtoMapper.toUser(userRequestDto);
         User savedUser = userRepository.save(user);
         return UserDtoMapper.toDto(savedUser);
     }
 
     @Override
-    public UserResponseDto updateUser(Long userId, UserUpdateDto userUpdateDto) {
-        User user = UserDtoMapper.toUser(userUpdateDto);
+    public UserResponseDto updateUser(Long userId, UserRequestDto userRequestDto) {
+        User user = UserDtoMapper.toUser(userRequestDto);
 
         User userToUpdate = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User with id = " + userId + " not found"));
@@ -56,11 +54,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserResponseDto> getAllUsers(Integer from, Integer size) {
-        if (from < 0 || size <= 0) {
-            throw new BadRequestException("'size' must be > 0 and 'from' must be >= 0. " +
-                    "size = " + size + ", from = " + from);
-        }
-
         int page = from / size;
         Pageable pageable = PageRequest.of(page, size);
         return userRepository.findAll(pageable).stream()

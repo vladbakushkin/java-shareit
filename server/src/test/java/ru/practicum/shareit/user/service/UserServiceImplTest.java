@@ -9,17 +9,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import ru.practicum.shareit.exception.BadRequestException;
-import ru.practicum.shareit.user.dto.UserNewDto;
+import ru.practicum.shareit.user.dto.UserRequestDto;
 import ru.practicum.shareit.user.dto.UserResponseDto;
-import ru.practicum.shareit.user.dto.UserUpdateDto;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -44,7 +43,7 @@ class UserServiceImplTest {
     @Test
     void saveUser_Valid_ReturnsUser() {
         // given
-        UserNewDto userToSave = createNewUserDto();
+        UserRequestDto userToSave = createNewUser1Dto();
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
 
         // when
@@ -60,12 +59,12 @@ class UserServiceImplTest {
     @Test
     void updateUser_Valid_ReturnsUser() {
         // given
-        UserUpdateDto userToUpdate = createUpdateUserDto();
+        UserRequestDto userToUpdate = createNewUser1Dto();
         when(userRepository.save(any(User.class))).thenReturn(updatedUser);
         when(userRepository.findById(any(Long.class))).thenReturn(Optional.ofNullable(updatedUser));
 
         // when
-        UserResponseDto updatedUser = userService.updateUser(userToUpdate.getId(), userToUpdate);
+        UserResponseDto updatedUser = userService.updateUser(1L, userToUpdate);
 
         // then
         assertNotNull(updatedUser);
@@ -80,13 +79,13 @@ class UserServiceImplTest {
         User user = new User();
         user.setId(1L);
         user.setEmail("user@email.com");
-        UserUpdateDto userToUpdate = createUpdateUserDto();
+        UserRequestDto userToUpdate = createNewUser1Dto();
         userToUpdate.setName(null);
         when(userRepository.save(any(User.class))).thenReturn(user);
         when(userRepository.findById(any(Long.class))).thenReturn(Optional.ofNullable(updatedUser));
 
         // when
-        UserResponseDto updatedUser = userService.updateUser(userToUpdate.getId(), userToUpdate);
+        UserResponseDto updatedUser = userService.updateUser(1L, userToUpdate);
 
         // then
         assertNotNull(updatedUser);
@@ -101,13 +100,13 @@ class UserServiceImplTest {
         User user = new User();
         user.setId(1L);
         user.setName("New Name");
-        UserUpdateDto userToUpdate = createUpdateUserDto();
+        UserRequestDto userToUpdate = createNewUser2Dto();
         userToUpdate.setEmail(null);
         when(userRepository.save(any(User.class))).thenReturn(user);
         when(userRepository.findById(any(Long.class))).thenReturn(Optional.ofNullable(updatedUser));
 
         // when
-        UserResponseDto updatedUser = userService.updateUser(userToUpdate.getId(), userToUpdate);
+        UserResponseDto updatedUser = userService.updateUser(1L, userToUpdate);
 
         // then
         assertNotNull(updatedUser);
@@ -119,7 +118,7 @@ class UserServiceImplTest {
     @Test
     void getUser_ReturnsUser() {
         // given
-        UserNewDto userToGet = createNewUserDto();
+        UserRequestDto userToGet = createNewUser1Dto();
         when(userRepository.findById(any(Long.class))).thenReturn(Optional.ofNullable(savedUser));
 
         // when
@@ -134,8 +133,8 @@ class UserServiceImplTest {
     @Test
     void getAllUsers_ReturnsAllUsers() {
         // given
-        UserNewDto newUserToGet = createNewUserDto();
-        UserUpdateDto updateUserToGet = createUpdateUserDto();
+        UserRequestDto newUserToGet = createNewUser1Dto();
+        UserRequestDto updateUserToGet = createNewUser2Dto();
         Page<User> userPage = new PageImpl<>(List.of(savedUser, updatedUser));
         when(userRepository.findAll(any(Pageable.class))).thenReturn(userPage);
 
@@ -153,16 +152,6 @@ class UserServiceImplTest {
     }
 
     @Test
-    void getMyRequests_pageArgumentsWrong_ThrowsBadRequestException() {
-        // then
-        assertThrows(BadRequestException.class,
-                () -> userService.getAllUsers(-1, 10));
-
-        assertThrows(BadRequestException.class,
-                () -> userService.getAllUsers(0, 0));
-    }
-
-    @Test
     void deleteUser() {
         // given
         doNothing().when(userRepository).deleteById(any(Long.class));
@@ -174,18 +163,17 @@ class UserServiceImplTest {
         verify(userRepository, times(1)).deleteById(any(Long.class));
     }
 
-    private UserNewDto createNewUserDto() {
-        UserNewDto userNewDto = new UserNewDto();
-        userNewDto.setName("User");
-        userNewDto.setEmail("user@email.com");
-        return userNewDto;
+    private UserRequestDto createNewUser1Dto() {
+        UserRequestDto userRequestDto = new UserRequestDto();
+        userRequestDto.setName("User");
+        userRequestDto.setEmail("user@email.com");
+        return userRequestDto;
     }
 
-    private UserUpdateDto createUpdateUserDto() {
-        UserUpdateDto userUpdateDto = new UserUpdateDto();
-        userUpdateDto.setId(1L);
-        userUpdateDto.setName("New Name");
-        userUpdateDto.setEmail("user@email.com");
-        return userUpdateDto;
+    private UserRequestDto createNewUser2Dto() {
+        UserRequestDto userRequestDto = new UserRequestDto();
+        userRequestDto.setName("New Name");
+        userRequestDto.setEmail("user@email.com");
+        return userRequestDto;
     }
 }

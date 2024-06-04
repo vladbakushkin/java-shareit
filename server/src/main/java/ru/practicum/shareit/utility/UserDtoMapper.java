@@ -1,8 +1,7 @@
 package ru.practicum.shareit.utility;
 
-import ru.practicum.shareit.user.dto.UserNewDto;
+import ru.practicum.shareit.user.dto.UserRequestDto;
 import ru.practicum.shareit.user.dto.UserResponseDto;
-import ru.practicum.shareit.user.dto.UserUpdateDto;
 import ru.practicum.shareit.user.model.User;
 
 public final class UserDtoMapper {
@@ -18,17 +17,10 @@ public final class UserDtoMapper {
                 .build();
     }
 
-    public static User toUser(UserNewDto userNewDto) {
+    public static User toUser(UserRequestDto userRequestDto) {
         return User.builder()
-                .name(userNewDto.getName())
-                .email(userNewDto.getEmail())
-                .build();
-    }
-
-    public static User toUser(UserUpdateDto userUpdateDto) {
-        return User.builder()
-                .name(userUpdateDto.getName())
-                .email(userUpdateDto.getEmail())
+                .name(userRequestDto.getName())
+                .email(userRequestDto.getEmail())
                 .build();
     }
 }

@@ -9,9 +9,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.user.dto.UserNewDto;
+import ru.practicum.shareit.user.dto.UserRequestDto;
 import ru.practicum.shareit.user.dto.UserResponseDto;
-import ru.practicum.shareit.user.dto.UserUpdateDto;
 import ru.practicum.shareit.user.service.UserService;
 
 import java.util.List;
@@ -43,7 +42,7 @@ class UserControllerTest {
         UserResponseDto userResponseDto = createUserResponseDto();
 
         // when
-        when(userService.saveUser(any(UserNewDto.class))).thenReturn(userResponseDto);
+        when(userService.saveUser(any(UserRequestDto.class))).thenReturn(userResponseDto);
 
         // then
         mockMvc.perform(
@@ -56,27 +55,12 @@ class UserControllerTest {
     }
 
     @Test
-    void saveUser_EmailInvalid_ThrowsMethodArgumentNotValidException() throws Exception {
-        // given
-        UserNewDto userNewDto = new UserNewDto();
-        userNewDto.setName("name");
-        userNewDto.setEmail("user.email.com");
-
-        // then
-        mockMvc.perform(
-                        post("/users")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(userNewDto)))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
     void updateUser_RequestIsValid_ReturnUser() throws Exception {
         // given
         UserResponseDto userResponseDto = createUserResponseDto();
 
         // when
-        when(userService.updateUser(any(Long.class), any(UserUpdateDto.class))).thenReturn(userResponseDto);
+        when(userService.updateUser(any(Long.class), any(UserRequestDto.class))).thenReturn(userResponseDto);
 
         // then
         mockMvc.perform(
