@@ -1,7 +1,7 @@
 package ru.practicum.shareit.utility;
 
-import ru.practicum.shareit.item.dto.ItemDetailsDto;
 import ru.practicum.shareit.item.dto.ItemRequestDto;
+import ru.practicum.shareit.item.dto.ItemResponseDto;
 import ru.practicum.shareit.item.model.Item;
 
 public final class ItemDtoMapper {
@@ -9,8 +9,8 @@ public final class ItemDtoMapper {
     private ItemDtoMapper() {
     }
 
-    public static ItemDetailsDto toItemDetailsDto(Item item) {
-        return ItemDetailsDto.builder()
+    public static ItemResponseDto toDto(Item item) {
+        return ItemResponseDto.builder()
                 .id(item.getId())
                 .name(item.getName())
                 .description(item.getDescription())

@@ -11,8 +11,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.dto.CommentRequestDto;
 import ru.practicum.shareit.item.dto.CommentResponseDto;
-import ru.practicum.shareit.item.dto.ItemDetailsDto;
 import ru.practicum.shareit.item.dto.ItemRequestDto;
+import ru.practicum.shareit.item.dto.ItemResponseDto;
 import ru.practicum.shareit.item.service.ItemService;
 import ru.practicum.shareit.user.dto.UserRequestDto;
 
@@ -41,17 +41,17 @@ class ItemControllerTest {
     @Test
     void addItem_RequestIsValid_ReturnItem() throws Exception {
         // given
-        ItemDetailsDto itemDetailsDto = createItemDetailsDto();
+        ItemResponseDto itemResponseDto = createItemDetailsDto();
 
         // when
-        when(itemService.addItem(any(Long.class), any(ItemRequestDto.class))).thenReturn(itemDetailsDto);
+        when(itemService.addItem(any(Long.class), any(ItemRequestDto.class))).thenReturn(itemResponseDto);
 
         // then
         mockMvc.perform(
                         post("/items")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .header("X-Sharer-User-Id", 1)
-                                .content(objectMapper.writeValueAsString(itemDetailsDto)))
+                                .content(objectMapper.writeValueAsString(itemResponseDto)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Item"))
                 .andExpect(jsonPath("$.description").value("Description"))
@@ -61,18 +61,18 @@ class ItemControllerTest {
     @Test
     void updateItem_RequestIsValid_ReturnItem() throws Exception {
         // given
-        ItemDetailsDto itemDetailsDto = createItemDetailsDto();
+        ItemResponseDto itemResponseDto = createItemDetailsDto();
 
         // when
         when(itemService.updateItem(any(Long.class), any(Long.class), any(ItemRequestDto.class)))
-                .thenReturn(itemDetailsDto);
+                .thenReturn(itemResponseDto);
 
         // then
         mockMvc.perform(
-                        patch("/items/" + itemDetailsDto.getId())
+                        patch("/items/" + itemResponseDto.getId())
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .header("X-Sharer-User-Id", 1)
-                                .content(objectMapper.writeValueAsString(itemDetailsDto)))
+                                .content(objectMapper.writeValueAsString(itemResponseDto)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value("1"))
                 .andExpect(jsonPath("$.name").value("Item"))
@@ -83,10 +83,10 @@ class ItemControllerTest {
     @Test
     void getItem_valid_ReturnsItem() throws Exception {
         // given
-        ItemDetailsDto itemDetailsDto = createItemDetailsDto();
+        ItemResponseDto itemResponseDto = createItemDetailsDto();
 
         // when
-        when(itemService.getItem(any(Long.class), any(Long.class))).thenReturn(itemDetailsDto);
+        when(itemService.getItem(any(Long.class), any(Long.class))).thenReturn(itemResponseDto);
 
         // then
         mockMvc.perform(
@@ -117,15 +117,15 @@ class ItemControllerTest {
     @Test
     void getAllItemsByOwner() throws Exception {
         // given
-        ItemDetailsDto itemDetailsDto1 = createItemDetailsDto();
-        ItemDetailsDto itemDetailsDto2 = createItemDetailsDto();
-        itemDetailsDto2.setName("Item2");
-        itemDetailsDto2.setDescription("Description2");
-        itemDetailsDto2.setAvailable(false);
+        ItemResponseDto itemResponseDto1 = createItemDetailsDto();
+        ItemResponseDto itemResponseDto2 = createItemDetailsDto();
+        itemResponseDto2.setName("Item2");
+        itemResponseDto2.setDescription("Description2");
+        itemResponseDto2.setAvailable(false);
 
         // when
         when(itemService.getAllItemsByOwner(any(Long.class), any(Integer.class), any(Integer.class)))
-                .thenReturn(List.of(itemDetailsDto1, itemDetailsDto2));
+                .thenReturn(List.of(itemResponseDto1, itemResponseDto2));
 
         // then
         mockMvc.perform(
@@ -144,15 +144,15 @@ class ItemControllerTest {
     @Test
     void searchItem() throws Exception {
         // given
-        ItemDetailsDto itemDetailsDto1 = createItemDetailsDto();
-        ItemDetailsDto itemDetailsDto2 = createItemDetailsDto();
-        itemDetailsDto2.setName("Item2");
-        itemDetailsDto2.setDescription("Description2");
-        itemDetailsDto2.setAvailable(false);
+        ItemResponseDto itemResponseDto1 = createItemDetailsDto();
+        ItemResponseDto itemResponseDto2 = createItemDetailsDto();
+        itemResponseDto2.setName("Item2");
+        itemResponseDto2.setDescription("Description2");
+        itemResponseDto2.setAvailable(false);
 
         // when
         when(itemService.searchAvailableItem(any(String.class), any(Integer.class), any(Integer.class)))
-                .thenReturn(List.of(itemDetailsDto1, itemDetailsDto2));
+                .thenReturn(List.of(itemResponseDto1, itemResponseDto2));
 
         // then
         mockMvc.perform(
@@ -200,8 +200,8 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$.created").value(commentResponseDto.getCreated()));
     }
 
-    private ItemDetailsDto createItemDetailsDto() {
-        return ItemDetailsDto.builder()
+    private ItemResponseDto createItemDetailsDto() {
+        return ItemResponseDto.builder()
                 .id(1L)
                 .name("Item")
                 .description("Description")

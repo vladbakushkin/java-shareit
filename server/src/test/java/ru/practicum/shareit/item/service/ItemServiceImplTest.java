@@ -15,8 +15,8 @@ import ru.practicum.shareit.exception.BadRequestException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.dto.CommentRequestDto;
 import ru.practicum.shareit.item.dto.CommentResponseDto;
-import ru.practicum.shareit.item.dto.ItemDetailsDto;
 import ru.practicum.shareit.item.dto.ItemRequestDto;
+import ru.practicum.shareit.item.dto.ItemResponseDto;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.CommentRepository;
@@ -78,7 +78,7 @@ class ItemServiceImplTest {
         when(userRepository.findById(any(Long.class))).thenReturn(Optional.ofNullable(user));
 
         // when
-        ItemDetailsDto addedItem = itemService.addItem(1L, itemToAdd);
+        ItemResponseDto addedItem = itemService.addItem(1L, itemToAdd);
 
         // then
         assertNotNull(addedItem);
@@ -100,7 +100,7 @@ class ItemServiceImplTest {
         when(itemRequestRepository.findById(itemToAdd.getRequestId())).thenReturn(Optional.of(itemRequest));
 
         // when
-        ItemDetailsDto addedItem = itemService.addItem(1L, itemToAdd);
+        ItemResponseDto addedItem = itemService.addItem(1L, itemToAdd);
 
         // then
         assertNotNull(addedItem);
@@ -119,7 +119,7 @@ class ItemServiceImplTest {
         when(itemRepository.findById(any(Long.class))).thenReturn(Optional.ofNullable(updatedItem));
 
         // when
-        ItemDetailsDto updatedItem = itemService.updateItem(1L, 1L, itemToUpdate);
+        ItemResponseDto updatedItem = itemService.updateItem(1L, 1L, itemToUpdate);
 
         // then
         assertNotNull(updatedItem);
@@ -143,7 +143,7 @@ class ItemServiceImplTest {
         when(itemRepository.findById(any(Long.class))).thenReturn(Optional.ofNullable(updatedItem));
 
         // when
-        ItemDetailsDto updatedItem = itemService.updateItem(1L, 1L, itemToUpdate);
+        ItemResponseDto updatedItem = itemService.updateItem(1L, 1L, itemToUpdate);
 
         // then
         assertNotNull(updatedItem);
@@ -169,11 +169,11 @@ class ItemServiceImplTest {
     @Test
     void getItem_Valid_ReturnItem() {
         // given
-        ItemDetailsDto itemToGet = createItemDetailsDto();
+        ItemResponseDto itemToGet = createItemDetailsDto();
         when(itemRepository.findById(any(Long.class))).thenReturn(Optional.ofNullable(addedItem));
 
         // when
-        ItemDetailsDto addedItem = itemService.getItem(1L, 1L);
+        ItemResponseDto addedItem = itemService.getItem(1L, 1L);
 
         // then
         assertNotNull(addedItem);
@@ -185,7 +185,7 @@ class ItemServiceImplTest {
     @Test
     void getItem_WithLastBookingValid_ReturnItem() {
         // given
-        ItemDetailsDto itemToGet = createItemDetailsDto();
+        ItemResponseDto itemToGet = createItemDetailsDto();
         Booking booking = new Booking(1L, LocalDateTime.now().minusHours(2), LocalDateTime.now().minusHours(1),
                 updatedItem, user, BookingStatus.APPROVED);
         BookingRequestDto bookingRequestDto = BookingDtoMapper.toBookingRequestDto(booking);
@@ -194,7 +194,7 @@ class ItemServiceImplTest {
         when(bookingRepository.findAllByItemIdOrderByEndDesc(any(Long.class))).thenReturn(List.of(booking));
 
         // when
-        ItemDetailsDto addedItem = itemService.getItem(1L, 1L);
+        ItemResponseDto addedItem = itemService.getItem(1L, 1L);
 
         // then
         assertNotNull(addedItem);
@@ -207,7 +207,7 @@ class ItemServiceImplTest {
     @Test
     void getItem_WithNextBookingValid_ReturnItem() {
         // given
-        ItemDetailsDto itemToGet = createItemDetailsDto();
+        ItemResponseDto itemToGet = createItemDetailsDto();
         Booking booking = new Booking(1L, LocalDateTime.now().plusHours(1), LocalDateTime.now().plusHours(2),
                 updatedItem, user, BookingStatus.APPROVED);
         BookingRequestDto bookingRequestDto = BookingDtoMapper.toBookingRequestDto(booking);
@@ -216,7 +216,7 @@ class ItemServiceImplTest {
         when(bookingRepository.findAllByItemIdOrderByEndDesc(any(Long.class))).thenReturn(List.of(booking));
 
         // when
-        ItemDetailsDto addedItem = itemService.getItem(1L, 1L);
+        ItemResponseDto addedItem = itemService.getItem(1L, 1L);
 
         // then
         assertNotNull(addedItem);
@@ -229,13 +229,13 @@ class ItemServiceImplTest {
     @Test
     void getItem_WithoutCommentsValid_ReturnItem() {
         // given
-        ItemDetailsDto itemToGet = createItemDetailsDto();
+        ItemResponseDto itemToGet = createItemDetailsDto();
 
         when(itemRepository.findById(any(Long.class))).thenReturn(Optional.ofNullable(addedItem));
         when(commentRepository.findAllByItemId(any(Long.class))).thenReturn(null);
 
         // when
-        ItemDetailsDto addedItem = itemService.getItem(1L, 1L);
+        ItemResponseDto addedItem = itemService.getItem(1L, 1L);
 
         // then
         assertNotNull(addedItem);
@@ -248,13 +248,13 @@ class ItemServiceImplTest {
     @Test
     void getAllItemsByOwner_Valid_ReturnItems() {
         // given
-        ItemDetailsDto itemToGet1 = createItemDetailsDto();
-        ItemDetailsDto itemToGet2 = createItemDetailsDto();
+        ItemResponseDto itemToGet1 = createItemDetailsDto();
+        ItemResponseDto itemToGet2 = createItemDetailsDto();
         when(itemRepository.findAllByUserIdOrderById(any(Long.class), any(Pageable.class)))
                 .thenReturn(List.of(addedItem, addedItem));
 
         // when
-        List<ItemDetailsDto> items = itemService.getAllItemsByOwner(1L, 0, 10);
+        List<ItemResponseDto> items = itemService.getAllItemsByOwner(1L, 0, 10);
 
         // then
         assertNotNull(items);
@@ -274,7 +274,7 @@ class ItemServiceImplTest {
                 .thenReturn(List.of(addedItem));
 
         // when
-        List<ItemDetailsDto> availableItems = itemService.searchAvailableItem("sCripT", 0, 10);
+        List<ItemResponseDto> availableItems = itemService.searchAvailableItem("sCripT", 0, 10);
 
         // then
         assertNotNull(availableItems);
@@ -286,7 +286,7 @@ class ItemServiceImplTest {
     @Test
     void searchAvailableItem_WithBlankRequestValid_ReturnItems() {
         // when
-        List<ItemDetailsDto> availableItems = itemService.searchAvailableItem("", 0, 10);
+        List<ItemResponseDto> availableItems = itemService.searchAvailableItem("", 0, 10);
 
         // then
         assertNotNull(availableItems);
@@ -375,8 +375,8 @@ class ItemServiceImplTest {
                 .build();
     }
 
-    private ItemDetailsDto createItemDetailsDto() {
-        return ItemDetailsDto.builder()
+    private ItemResponseDto createItemDetailsDto() {
+        return ItemResponseDto.builder()
                 .id(1L)
                 .name("Item")
                 .description("Description")

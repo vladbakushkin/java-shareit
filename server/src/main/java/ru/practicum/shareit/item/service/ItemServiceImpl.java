@@ -12,8 +12,8 @@ import ru.practicum.shareit.exception.BadRequestException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.dto.CommentRequestDto;
 import ru.practicum.shareit.item.dto.CommentResponseDto;
-import ru.practicum.shareit.item.dto.ItemDetailsDto;
 import ru.practicum.shareit.item.dto.ItemRequestDto;
+import ru.practicum.shareit.item.dto.ItemResponseDto;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.CommentRepository;
@@ -40,7 +40,7 @@ public class ItemServiceImpl implements ItemService {
     private final ItemRequestRepository itemRequestRepository;
 
     @Override
-    public ItemDetailsDto addItem(Long userId, ItemRequestDto itemRequestDto) {
+    public ItemResponseDto addItem(Long userId, ItemRequestDto itemRequestDto) {
         Item item = ItemDtoMapper.toItem(itemRequestDto);
 
         if (itemRequestDto.getRequestId() != null) {
@@ -54,11 +54,11 @@ public class ItemServiceImpl implements ItemService {
         item.setUser(owner);
 
         Item savedItem = itemRepository.save(item);
-        return ItemDtoMapper.toItemDetailsDto(savedItem);
+        return ItemDtoMapper.toDto(savedItem);
     }
 
     @Override
-    public ItemDetailsDto updateItem(Long userId, Long itemId, ItemRequestDto itemRequestDto) {
+    public ItemResponseDto updateItem(Long userId, Long itemId, ItemRequestDto itemRequestDto) {
         Item item = ItemDtoMapper.toItem(itemRequestDto);
 
         Item itemToUpdate = itemRepository.findById(itemId)
@@ -82,11 +82,11 @@ public class ItemServiceImpl implements ItemService {
         }
 
         Item updatedItem = itemRepository.save(itemToUpdate);
-        return ItemDtoMapper.toItemDetailsDto(updatedItem);
+        return ItemDtoMapper.toDto(updatedItem);
     }
 
     @Override
-    public ItemDetailsDto getItem(Long userId, Long itemId) {
+    public ItemResponseDto getItem(Long userId, Long itemId) {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Item with id = " + itemId + " not found"));
 
@@ -98,7 +98,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemDetailsDto> getAllItemsByOwner(Long userId, Integer from, Integer size) {
+    public List<ItemResponseDto> getAllItemsByOwner(Long userId, Integer from, Integer size) {
         int page = from / size;
         Pageable pageable = PageRequest.of(page, size);
 
@@ -114,7 +114,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemDetailsDto> searchAvailableItem(String text, Integer from, Integer size) {
+    public List<ItemResponseDto> searchAvailableItem(String text, Integer from, Integer size) {
         if (text.isBlank()) {
             return new ArrayList<>();
         }
@@ -123,7 +123,7 @@ public class ItemServiceImpl implements ItemService {
         Pageable pageable = PageRequest.of(page, size);
 
         return itemRepository.searchAvailableItem(text, pageable).stream()
-                .map(ItemDtoMapper::toItemDetailsDto)
+                .map(ItemDtoMapper::toDto)
                 .collect(Collectors.toList());
     }
 
@@ -151,8 +151,8 @@ public class ItemServiceImpl implements ItemService {
         return CommentDtoMapper.toResponseDto(savedComment);
     }
 
-    private ItemDetailsDto makeItemWithBookingsAndComments(Long userId, Item item, List<Booking> bookings,
-                                                           List<Comment> comments) {
+    private ItemResponseDto makeItemWithBookingsAndComments(Long userId, Item item, List<Booking> bookings,
+                                                            List<Comment> comments) {
         LocalDateTime now = LocalDateTime.now();
 
         Optional<Booking> last = bookings.stream()
@@ -174,7 +174,7 @@ public class ItemServiceImpl implements ItemService {
                         b.getStart().isAfter(now) || b.getStart().isEqual(now))
                 .findFirst();
 
-        ItemDetailsDto dto = ItemDtoMapper.toItemDetailsDto(item);
+        ItemResponseDto dto = ItemDtoMapper.toDto(item);
         last.ifPresent(booking -> dto.setLastBooking(BookingDtoMapper.toBookingRequestDto(last.get())));
         next.ifPresent(booking -> dto.setNextBooking(BookingDtoMapper.toBookingRequestDto(next.get())));
         if (comments != null) {

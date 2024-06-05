@@ -12,7 +12,7 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ItemDetailsDto {
+public class ItemResponseDto {
     private Long id;
     private String name;
     private String description;

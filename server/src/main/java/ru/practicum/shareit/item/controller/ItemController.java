@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.CommentRequestDto;
 import ru.practicum.shareit.item.dto.CommentResponseDto;
-import ru.practicum.shareit.item.dto.ItemDetailsDto;
 import ru.practicum.shareit.item.dto.ItemRequestDto;
+import ru.practicum.shareit.item.dto.ItemResponseDto;
 import ru.practicum.shareit.item.service.ItemService;
 import ru.practicum.shareit.utility.CustomHeaders;
 
@@ -18,35 +18,35 @@ public class ItemController {
     private final ItemService itemService;
 
     @PostMapping
-    public ItemDetailsDto addItem(@RequestHeader(CustomHeaders.X_SHARER_USER_ID) Long userId,
-                                  @RequestBody ItemRequestDto itemRequestDto) {
+    public ItemResponseDto addItem(@RequestHeader(CustomHeaders.X_SHARER_USER_ID) Long userId,
+                                   @RequestBody ItemRequestDto itemRequestDto) {
         return itemService.addItem(userId, itemRequestDto);
     }
 
     @PatchMapping("/{itemId}")
-    public ItemDetailsDto updateItem(@RequestHeader(CustomHeaders.X_SHARER_USER_ID) Long userId,
-                                     @PathVariable Long itemId,
-                                     @RequestBody ItemRequestDto itemRequestDto) {
+    public ItemResponseDto updateItem(@RequestHeader(CustomHeaders.X_SHARER_USER_ID) Long userId,
+                                      @PathVariable Long itemId,
+                                      @RequestBody ItemRequestDto itemRequestDto) {
         return itemService.updateItem(userId, itemId, itemRequestDto);
     }
 
     @GetMapping("/{itemId}")
-    public ItemDetailsDto getItem(@RequestHeader(CustomHeaders.X_SHARER_USER_ID) Long userId,
-                                  @PathVariable Long itemId) {
+    public ItemResponseDto getItem(@RequestHeader(CustomHeaders.X_SHARER_USER_ID) Long userId,
+                                   @PathVariable Long itemId) {
         return itemService.getItem(userId, itemId);
     }
 
     @GetMapping
-    public List<ItemDetailsDto> getAllItemsByOwner(@RequestHeader(CustomHeaders.X_SHARER_USER_ID) Long userId,
-                                                   @RequestParam(defaultValue = "0") Integer from,
-                                                   @RequestParam(defaultValue = "10") Integer size) {
+    public List<ItemResponseDto> getAllItemsByOwner(@RequestHeader(CustomHeaders.X_SHARER_USER_ID) Long userId,
+                                                    @RequestParam(defaultValue = "0") Integer from,
+                                                    @RequestParam(defaultValue = "10") Integer size) {
         return itemService.getAllItemsByOwner(userId, from, size);
     }
 
     @GetMapping("/search")
-    public List<ItemDetailsDto> searchItem(@RequestParam String text,
-                                           @RequestParam(defaultValue = "0") Integer from,
-                                           @RequestParam(defaultValue = "10") Integer size) {
+    public List<ItemResponseDto> searchItem(@RequestParam String text,
+                                            @RequestParam(defaultValue = "0") Integer from,
+                                            @RequestParam(defaultValue = "10") Integer size) {
         return itemService.searchAvailableItem(text, from, size);
     }
 

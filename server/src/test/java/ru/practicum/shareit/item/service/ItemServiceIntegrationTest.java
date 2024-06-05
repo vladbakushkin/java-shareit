@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.repository.BookingRepository;
-import ru.practicum.shareit.item.dto.ItemDetailsDto;
+import ru.practicum.shareit.item.dto.ItemResponseDto;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.CommentRepository;
@@ -94,7 +94,7 @@ class ItemServiceIntegrationTest {
         commentRepository.save(comment2);
 
         // when
-        List<ItemDetailsDto> items = itemService.getAllItemsByOwner(user.getId(), 0, 2);
+        List<ItemResponseDto> items = itemService.getAllItemsByOwner(user.getId(), 0, 2);
 
         // then
         assertThat(items.size(), equalTo(2));
