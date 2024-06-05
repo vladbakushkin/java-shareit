@@ -68,22 +68,6 @@ class ItemRequestControllerTest {
 
     @SneakyThrows
     @Test
-    void addRequest_DescriptionIsBlank_ThrowsBadRequestException() {
-        // given
-        ItemRequestRequestDto requestDto = getItemRequestRequestDto();
-        requestDto.setDescription("");
-
-        // then
-        mockMvc.perform(
-                        post("/requests")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .header("X-Sharer-User-Id", 1)
-                                .content(objectMapper.writeValueAsString(requestDto)))
-                .andExpect(status().isBadRequest());
-    }
-
-    @SneakyThrows
-    @Test
     void getMyRequests_RequestIsValid_ReturnCorrectResponse() {
         // given
         ItemRequestResponseDto itemRequestResponseDto = getItemRequestResponseDto();

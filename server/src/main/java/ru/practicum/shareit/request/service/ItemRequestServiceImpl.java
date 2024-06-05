@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.exception.BadRequestException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
@@ -55,11 +54,6 @@ public class ItemRequestServiceImpl implements ItemRequestService {
 
     @Override
     public List<ItemRequestResponseDto> getAllRequests(Long userId, Integer from, Integer size) {
-        if (from < 0 || size <= 0) {
-            throw new BadRequestException("'size' must be > 0 and 'from' must be >= 0. " +
-                    "size = " + size + ", from = " + from);
-        }
-
         int page = from / size;
         Pageable pageable = PageRequest.of(page, size);
 

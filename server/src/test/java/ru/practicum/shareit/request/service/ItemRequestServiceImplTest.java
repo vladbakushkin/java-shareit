@@ -6,7 +6,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Pageable;
-import ru.practicum.shareit.exception.BadRequestException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
@@ -84,16 +83,6 @@ class ItemRequestServiceImplTest {
 
         // then
         assertEquals(List.of(expectedResponseDto), actualResponseDto);
-    }
-
-    @Test
-    void getMyRequests_pageArgumentsWrong_ThrowsBadRequestException() {
-        // then
-        assertThrows(BadRequestException.class,
-                () -> itemRequestService.getAllRequests(1L, -1, 10));
-
-        assertThrows(BadRequestException.class,
-                () -> itemRequestService.getAllRequests(1L, 5, 0));
     }
 
     @Test
