@@ -106,11 +106,6 @@ public class BookingServiceImpl implements BookingService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User with id = " + userId + " not found"));
 
-        if (from < 0 || size <= 0) {
-            throw new BadRequestException("'size' must be > 0 and 'from' must be >= 0. " +
-                    "size = " + size + ", from = " + from);
-        }
-
         int page = from / size;
         Sort sort = Sort.by(Sort.Direction.DESC, "start");
         Pageable pageable = PageRequest.of(page, size, sort);

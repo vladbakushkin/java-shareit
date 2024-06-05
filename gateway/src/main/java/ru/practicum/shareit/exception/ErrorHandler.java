@@ -33,4 +33,13 @@ public class ErrorHandler {
                         "Поле: \"" + e.getConstraintViolations().iterator().next().getPropertyPath() + "\" " +
                         "Причина: \"" + e.getConstraintViolations().iterator().next().getMessage() + "\"");
     }
+
+    @ExceptionHandler(UnknownStateException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleUnknownStateException(final UnknownStateException e) {
+        return new ErrorResponse(
+                400,
+                "Unknown state: " + e.getMessage(),
+                "State must be: ALL, CURRENT, PAST, FUTURE, WAITING, REJECTED");
+    }
 }
