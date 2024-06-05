@@ -10,7 +10,10 @@ import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exception.BadRequestException;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.item.dto.*;
+import ru.practicum.shareit.item.dto.CommentRequestDto;
+import ru.practicum.shareit.item.dto.CommentResponseDto;
+import ru.practicum.shareit.item.dto.ItemDetailsDto;
+import ru.practicum.shareit.item.dto.ItemRequestDto;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.CommentRepository;
@@ -55,8 +58,8 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public ItemDetailsDto updateItem(Long userId, Long itemId, ItemUpdateDto itemUpdateDto) {
-        Item item = ItemDtoMapper.toItem(itemUpdateDto);
+    public ItemDetailsDto updateItem(Long userId, Long itemId, ItemRequestDto itemRequestDto) {
+        Item item = ItemDtoMapper.toItem(itemRequestDto);
 
         Item itemToUpdate = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Item with id = " + itemId + " not found"));
@@ -96,14 +99,8 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public List<ItemDetailsDto> getAllItemsByOwner(Long userId, Integer from, Integer size) {
-        if (from < 0 || size <= 0) {
-            throw new BadRequestException("'size' must be > 0 and 'from' must be >= 0. " +
-                    "size = " + size + ", from = " + from);
-        }
-
         int page = from / size;
         Pageable pageable = PageRequest.of(page, size);
-
 
         List<Item> items = itemRepository.findAllByUserIdOrderById(userId, pageable);
 
@@ -120,10 +117,6 @@ public class ItemServiceImpl implements ItemService {
     public List<ItemDetailsDto> searchAvailableItem(String text, Integer from, Integer size) {
         if (text.isBlank()) {
             return new ArrayList<>();
-        }
-        if (from < 0 || size <= 0) {
-            throw new BadRequestException("'size' must be > 0 and 'from' must be >= 0. " +
-                    "size = " + size + ", from = " + from);
         }
 
         int page = from / size;

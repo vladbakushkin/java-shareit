@@ -1,9 +1,11 @@
 package ru.practicum.shareit.item.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.shareit.item.dto.*;
+import ru.practicum.shareit.item.dto.CommentRequestDto;
+import ru.practicum.shareit.item.dto.CommentResponseDto;
+import ru.practicum.shareit.item.dto.ItemDetailsDto;
+import ru.practicum.shareit.item.dto.ItemRequestDto;
 import ru.practicum.shareit.item.service.ItemService;
 import ru.practicum.shareit.utility.CustomHeaders;
 
@@ -17,15 +19,15 @@ public class ItemController {
 
     @PostMapping
     public ItemDetailsDto addItem(@RequestHeader(CustomHeaders.X_SHARER_USER_ID) Long userId,
-                                  @Validated @RequestBody ItemRequestDto itemRequestDto) {
+                                  @RequestBody ItemRequestDto itemRequestDto) {
         return itemService.addItem(userId, itemRequestDto);
     }
 
     @PatchMapping("/{itemId}")
     public ItemDetailsDto updateItem(@RequestHeader(CustomHeaders.X_SHARER_USER_ID) Long userId,
                                      @PathVariable Long itemId,
-                                     @Validated @RequestBody ItemUpdateDto itemUpdateDto) {
-        return itemService.updateItem(userId, itemId, itemUpdateDto);
+                                     @RequestBody ItemRequestDto itemRequestDto) {
+        return itemService.updateItem(userId, itemId, itemRequestDto);
     }
 
     @GetMapping("/{itemId}")
@@ -51,7 +53,7 @@ public class ItemController {
     @PostMapping("/{itemId}/comment")
     public CommentResponseDto addComment(@RequestHeader(CustomHeaders.X_SHARER_USER_ID) Long userId,
                                          @PathVariable Long itemId,
-                                         @Validated @RequestBody CommentRequestDto commentRequestDto) {
+                                         @RequestBody CommentRequestDto commentRequestDto) {
         return itemService.addComment(userId, itemId, commentRequestDto);
     }
 }

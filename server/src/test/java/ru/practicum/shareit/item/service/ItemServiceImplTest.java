@@ -13,13 +13,17 @@ import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exception.BadRequestException;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.item.dto.*;
+import ru.practicum.shareit.item.dto.CommentRequestDto;
+import ru.practicum.shareit.item.dto.CommentResponseDto;
+import ru.practicum.shareit.item.dto.ItemDetailsDto;
+import ru.practicum.shareit.item.dto.ItemRequestDto;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.request.repository.ItemRequestRepository;
+import ru.practicum.shareit.user.dto.UserRequestDto;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 import ru.practicum.shareit.utility.BookingDtoMapper;
@@ -69,7 +73,7 @@ class ItemServiceImplTest {
     @Test
     void addItem_Valid_ReturnItem() {
         // given
-        ItemRequestDto itemToAdd = createItemDto();
+        ItemRequestDto itemToAdd = createItem1Dto();
         when(itemRepository.save(any(Item.class))).thenReturn(addedItem);
         when(userRepository.findById(any(Long.class))).thenReturn(Optional.ofNullable(user));
 
@@ -87,7 +91,7 @@ class ItemServiceImplTest {
     @Test
     void addItem_WithRequestIdValid_ReturnItem() {
         // given
-        ItemRequestDto itemToAdd = createItemDto();
+        ItemRequestDto itemToAdd = createItem1Dto();
         itemToAdd.setRequestId(1L);
         when(itemRepository.save(any(Item.class))).thenReturn(addedItem);
         when(userRepository.findById(any(Long.class))).thenReturn(Optional.ofNullable(user));
@@ -109,7 +113,7 @@ class ItemServiceImplTest {
     @Test
     void updateItem_Valid_ReturnItem() {
         // given
-        ItemUpdateDto itemToUpdate = createUpdateItemDto();
+        ItemRequestDto itemToUpdate = createItem2Dto();
         when(itemRepository.save(any(Item.class))).thenReturn(updatedItem);
         when(userRepository.findById(any(Long.class))).thenReturn(Optional.ofNullable(user));
         when(itemRepository.findById(any(Long.class))).thenReturn(Optional.ofNullable(updatedItem));
@@ -119,7 +123,7 @@ class ItemServiceImplTest {
 
         // then
         assertNotNull(updatedItem);
-        assertEquals(itemToUpdate.getId(), updatedItem.getId());
+        assertEquals(1L, updatedItem.getId());
         assertEquals(itemToUpdate.getName(), updatedItem.getName());
         assertEquals(itemToUpdate.getDescription(), updatedItem.getDescription());
         assertEquals(itemToUpdate.getAvailable(), updatedItem.getAvailable());
@@ -130,7 +134,7 @@ class ItemServiceImplTest {
     void updateItem_WithoutFieldsValid_ReturnItem() {
         // given
         Item item = new Item();
-        ItemUpdateDto itemToUpdate = createUpdateItemDto();
+        ItemRequestDto itemToUpdate = createItem2Dto();
         itemToUpdate.setName(null);
         itemToUpdate.setDescription(null);
         itemToUpdate.setAvailable(null);
@@ -152,7 +156,7 @@ class ItemServiceImplTest {
     @Test
     void updateItem_NotOwnerInvalid_ThrowsNotFoundException() {
         // given
-        ItemUpdateDto itemToUpdate = createUpdateItemDto();
+        ItemRequestDto itemToUpdate = createItem2Dto();
         updatedItem.setUser(new User(2L, "user@email.com", "username"));
         when(userRepository.findById(any(Long.class))).thenReturn(Optional.ofNullable(user));
         when(itemRepository.findById(any(Long.class))).thenReturn(Optional.ofNullable(updatedItem));
@@ -263,18 +267,9 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void getAllItemsByOwner_pageArgumentsWrong_ThrowsBadRequestException() {
-        // then
-        assertThrows(BadRequestException.class,
-                () -> itemService.getAllItemsByOwner(1L, -1, 10));
-        assertThrows(BadRequestException.class,
-                () -> itemService.getAllItemsByOwner(1L, 0, 0));
-    }
-
-    @Test
     void searchAvailableItem_Valid_ReturnItems() {
         // given
-        ItemRequestDto itemToSearch = createItemDto();
+        ItemRequestDto itemToSearch = createItem1Dto();
         when(itemRepository.searchAvailableItem(any(String.class), any(Pageable.class)))
                 .thenReturn(List.of(addedItem));
 
@@ -299,16 +294,6 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void searchAvailableItem_pageArgumentsWrong_ThrowsBadRequestException() {
-        // then
-        assertThrows(BadRequestException.class,
-                () -> itemService.searchAvailableItem("item", -1, 10));
-
-        assertThrows(BadRequestException.class,
-                () -> itemService.searchAvailableItem("item", 0, 0));
-    }
-
-    @Test
     void addComment_Valid_ReturnComment() {
         // given
         when(userRepository.findById(any(Long.class))).thenReturn(Optional.ofNullable(user));
@@ -316,7 +301,11 @@ class ItemServiceImplTest {
         Booking booking = new Booking(1L, LocalDateTime.now().minusHours(2), LocalDateTime.now().minusHours(1),
                 updatedItem, user, BookingStatus.APPROVED);
         when(bookingRepository.findAllByItemIdOrderByEndDesc(any(Long.class))).thenReturn(List.of(booking));
-        CommentRequestDto commentRequestDto = new CommentRequestDto(1L, "text", updatedItem, user);
+        ItemRequestDto itemDto = createItem2Dto();
+        UserRequestDto authorDto = new UserRequestDto();
+        authorDto.setName("username");
+        authorDto.setEmail("email");
+        CommentRequestDto commentRequestDto = new CommentRequestDto("text", itemDto, authorDto);
         Comment comment = new Comment();
         comment.setAuthor(user);
         comment.setItem(updatedItem);
@@ -340,7 +329,11 @@ class ItemServiceImplTest {
         Booking booking = new Booking(1L, LocalDateTime.now().minusHours(2), LocalDateTime.now().minusHours(1),
                 updatedItem, new User(), BookingStatus.APPROVED);
         when(bookingRepository.findAllByItemIdOrderByEndDesc(any(Long.class))).thenReturn(List.of(booking));
-        CommentRequestDto commentRequestDto = new CommentRequestDto(1L, "text", updatedItem, user);
+        ItemRequestDto itemDto = createItem2Dto();
+        UserRequestDto authorDto = new UserRequestDto();
+        authorDto.setName("name");
+        authorDto.setEmail("email");
+        CommentRequestDto commentRequestDto = new CommentRequestDto("text", itemDto, authorDto);
 
         // then
         assertThrows(BadRequestException.class,
@@ -355,25 +348,27 @@ class ItemServiceImplTest {
         Booking booking = new Booking(1L, LocalDateTime.now(), LocalDateTime.now().plusHours(1),
                 updatedItem, user, BookingStatus.APPROVED);
         when(bookingRepository.findAllByItemIdOrderByEndDesc(any(Long.class))).thenReturn(List.of(booking));
-        CommentRequestDto commentRequestDto = new CommentRequestDto(1L, "text", updatedItem, user);
+        ItemRequestDto itemDto = createItem2Dto();
+        UserRequestDto authorDto = new UserRequestDto();
+        authorDto.setName("name");
+        authorDto.setEmail("email");
+        CommentRequestDto commentRequestDto = new CommentRequestDto("text", itemDto, authorDto);
 
         // then
         assertThrows(BadRequestException.class,
                 () -> itemService.addComment(1L, 1L, commentRequestDto));
     }
 
-    private ItemRequestDto createItemDto() {
+    private ItemRequestDto createItem1Dto() {
         return ItemRequestDto.builder()
-                .id(1L)
                 .name("Item")
                 .description("Description")
                 .available(true)
                 .build();
     }
 
-    private ItemUpdateDto createUpdateItemDto() {
-        return ItemUpdateDto.builder()
-                .id(1L)
+    private ItemRequestDto createItem2Dto() {
+        return ItemRequestDto.builder()
                 .name("Updated Item")
                 .description("Updated Description")
                 .available(false)

@@ -9,12 +9,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ItemRequestDto {
+public class ItemUpdateDto {
     private String name;
-
     private String description;
-
     private Boolean available;
-
-    private Long requestId;
 }

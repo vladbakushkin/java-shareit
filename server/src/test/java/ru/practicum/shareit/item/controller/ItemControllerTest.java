@@ -9,10 +9,12 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.item.dto.*;
-import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.item.dto.CommentRequestDto;
+import ru.practicum.shareit.item.dto.CommentResponseDto;
+import ru.practicum.shareit.item.dto.ItemDetailsDto;
+import ru.practicum.shareit.item.dto.ItemRequestDto;
 import ru.practicum.shareit.item.service.ItemService;
-import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.user.dto.UserRequestDto;
 
 import java.util.List;
 
@@ -57,63 +59,13 @@ class ItemControllerTest {
     }
 
     @Test
-    void addItem_nameIsBlank_ThrowsBadRequestException() throws Exception {
-        // given
-        ItemRequestDto itemRequestDto = new ItemRequestDto();
-        itemRequestDto.setName("");
-        itemRequestDto.setDescription("Description");
-        itemRequestDto.setAvailable(true);
-
-        // then
-        mockMvc.perform(
-                        post("/items")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .header("X-Sharer-User-Id", 1)
-                                .content(objectMapper.writeValueAsString(itemRequestDto)))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void addItem_descriptionIsBlank_ThrowsBadRequestException() throws Exception {
-        // given
-        ItemRequestDto itemRequestDto = new ItemRequestDto();
-        itemRequestDto.setName("name");
-        itemRequestDto.setDescription("");
-        itemRequestDto.setAvailable(true);
-
-        // then
-        mockMvc.perform(
-                        post("/items")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .header("X-Sharer-User-Id", 1)
-                                .content(objectMapper.writeValueAsString(itemRequestDto)))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void addItem_availableIsNull_ThrowsBadRequestException() throws Exception {
-        // given
-        ItemRequestDto itemRequestDto = new ItemRequestDto();
-        itemRequestDto.setName("name");
-        itemRequestDto.setDescription("description");
-        itemRequestDto.setAvailable(null);
-
-        // then
-        mockMvc.perform(
-                        post("/items")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .header("X-Sharer-User-Id", 1)
-                                .content(objectMapper.writeValueAsString(itemRequestDto)))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
     void updateItem_RequestIsValid_ReturnItem() throws Exception {
         // given
         ItemDetailsDto itemDetailsDto = createItemDetailsDto();
 
         // when
-        when(itemService.updateItem(any(Long.class), any(Long.class), any(ItemUpdateDto.class))).thenReturn(itemDetailsDto);
+        when(itemService.updateItem(any(Long.class), any(Long.class), any(ItemRequestDto.class)))
+                .thenReturn(itemDetailsDto);
 
         // then
         mockMvc.perform(
@@ -221,7 +173,9 @@ class ItemControllerTest {
         // given
         CommentRequestDto commentRequestDto = createCommentRequestDto();
         commentRequestDto.setText("text");
-        User author = new User(1L, "email", "name");
+        UserRequestDto author = new UserRequestDto();
+        author.setName("name");
+        author.setName("email");
         commentRequestDto.setAuthor(author);
 
         CommentResponseDto commentResponseDto = new CommentResponseDto();
@@ -246,23 +200,6 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$.created").value(commentResponseDto.getCreated()));
     }
 
-    @Test
-    void addComment_textIsBlank_ThrowsBadRequestException() throws Exception {
-        // given
-        CommentRequestDto commentRequestDto = createCommentRequestDto();
-        commentRequestDto.setText("");
-        User author = new User(1L, "email", "name");
-        commentRequestDto.setAuthor(author);
-
-        // then
-        mockMvc.perform(
-                        post("/items/1/comment")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .header("X-Sharer-User-Id", 1)
-                                .content(objectMapper.writeValueAsString(commentRequestDto)))
-                .andExpect(status().isBadRequest());
-    }
-
     private ItemDetailsDto createItemDetailsDto() {
         return ItemDetailsDto.builder()
                 .id(1L)
@@ -274,8 +211,7 @@ class ItemControllerTest {
 
     private CommentRequestDto createCommentRequestDto() {
         return CommentRequestDto.builder()
-                .id(1L)
-                .item(new Item())
+                .item(new ItemRequestDto())
                 .build();
     }
 }
