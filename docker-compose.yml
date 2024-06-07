@@ -1,19 +1,14 @@
 version: '3.8'
 services:
   db:
-    image: postgres:16.1
-    container_name: shareit-db
+    image: postgres:13.7-alpine
+    container_name: postgres_container
     ports:
-      - "5432:5432"
+      - "6541:5432"
     environment:
       - POSTGRES_DB=shareit
-      - POSTGRES_USER=dbuser
-      - POSTGRES_PASSWORD=12345
-    healthcheck:
-      test: pg_isready -q -d $$POSTGRES_DB -U $$POSTGRES_USER
-      timeout: 5s
-      interval: 5s
-      retries: 10
+      - POSTGRES_USER=shareit
+      - POSTGRES_PASSWORD=shareit
 
   server:
     build: ./server
@@ -31,7 +26,6 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - db
       - server
     environment:
       - SHAREIT_SERVER_URL=http://server:9090
