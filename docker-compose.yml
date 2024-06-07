@@ -21,8 +21,11 @@ services:
       - "9090:9090"
     depends_on:
       - db
+    restart: on-failure
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/shareit
+      - SPRING_DATASOURCE_USERNAME=shareit
+      - SPRING_DATASOURCE_PASSWORD=shareit
 
   gateway:
     build: ./gateway
@@ -31,5 +34,6 @@ services:
       - "8080:8080"
     depends_on:
       - server
+    restart: on-failure
     environment:
       - SHAREIT_SERVER_URL=http://server:9090
