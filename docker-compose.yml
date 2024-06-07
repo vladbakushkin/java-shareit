@@ -3,12 +3,16 @@ services:
   db:
     image: postgres:13.7-alpine
     container_name: postgres_container
+    volumes:
+      - /var/lib/postgresql/data/
     ports:
       - "6541:5432"
     environment:
       - POSTGRES_DB=shareit
       - POSTGRES_USER=shareit
       - POSTGRES_PASSWORD=shareit
+      - DB_HOST=db
+      - DB_PORT=5432
 
   server:
     build: ./server
