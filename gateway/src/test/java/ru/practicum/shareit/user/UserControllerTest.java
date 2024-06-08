@@ -13,7 +13,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.user.dto.UserNewDto;
 import ru.practicum.shareit.user.dto.UserUpdateDto;
 
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -38,7 +37,8 @@ class UserControllerTest {
         UserNewDto userNewDto = new UserNewDto();
         userNewDto.setName("user");
         userNewDto.setEmail("user@email.com");
-        when(userClient.createUser(any(UserNewDto.class))).thenReturn(new ResponseEntity<>(userNewDto, HttpStatus.OK));
+        when(userClient.createUser(userNewDto))
+                .thenReturn(new ResponseEntity<>(userNewDto, HttpStatus.OK));
 
         // then
         mockMvc.perform(
@@ -62,7 +62,11 @@ class UserControllerTest {
                         post("/users")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(userNewDto)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("400"))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Неправильно составлен запрос. " +
+                        "Поле: \"email\" Причина: \"Email should be valid\""));
     }
 
     @Test
@@ -71,7 +75,7 @@ class UserControllerTest {
         UserUpdateDto userUpdateDto = new UserUpdateDto();
         userUpdateDto.setName("user");
         userUpdateDto.setEmail("user@email.com");
-        when(userClient.updateUser(anyLong(), any(UserUpdateDto.class)))
+        when(userClient.updateUser(1L, userUpdateDto))
                 .thenReturn(new ResponseEntity<>(userUpdateDto, HttpStatus.OK));
 
         // then
@@ -90,7 +94,8 @@ class UserControllerTest {
         UserUpdateDto userUpdateDto = new UserUpdateDto();
         userUpdateDto.setName("user");
         userUpdateDto.setEmail("user@email.com");
-        when(userClient.getUser(anyLong())).thenReturn(new ResponseEntity<>(userUpdateDto, HttpStatus.OK));
+        when(userClient.getUser(1L))
+                .thenReturn(new ResponseEntity<>(userUpdateDto, HttpStatus.OK));
 
         // then
         mockMvc.perform(
@@ -104,7 +109,11 @@ class UserControllerTest {
     @Test
     void getAllUsers_IsValid_ReturnsResponseEntity() throws Exception {
         // given
-        when(userClient.getAllUsers(anyInt(), anyInt())).thenReturn(new ResponseEntity<>(HttpStatus.OK));
+        UserNewDto userNewDto = new UserNewDto();
+        userNewDto.setName("name");
+        userNewDto.setEmail("user@email.com");
+        when(userClient.getAllUsers(0, 10))
+                .thenReturn(new ResponseEntity<>(userNewDto, HttpStatus.OK));
 
         // then
         mockMvc.perform(
@@ -112,7 +121,9 @@ class UserControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .param("from", "0")
                                 .param("size", "10"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("name"))
+                .andExpect(jsonPath("$.email").value("user@email.com"));
     }
 
     @Test
@@ -123,20 +134,31 @@ class UserControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .param("from", String.valueOf(-1))
                                 .param("size", String.valueOf(10)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("400"))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Неправильно составлен запрос. " +
+                        "Поле: \"getAllUsers.from\" " +
+                        "Причина: \"must be greater than or equal to 0\""));
 
         mockMvc.perform(
                         get("/users")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .param("from", String.valueOf(0))
                                 .param("size", String.valueOf(0)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("400"))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Неправильно составлен запрос. " +
+                        "Поле: \"getAllUsers.size\" " +
+                        "Причина: \"must be greater than 0\""));
     }
 
     @Test
     void deleteUser_IsValid_ReturnsResponseEntity() throws Exception {
         // given
-        when(userClient.deleteUser(anyLong())).thenReturn(new ResponseEntity<>(HttpStatus.OK));
+        when(userClient.deleteUser(1L))
+                .thenReturn(new ResponseEntity<>(HttpStatus.OK));
 
         // then
         mockMvc.perform(

@@ -24,7 +24,7 @@ public class ItemController {
     private final ItemClient itemClient;
 
     @PostMapping
-    public ResponseEntity<Object> addItem(@Valid @RequestHeader(CustomHeaders.X_SHARER_USER_ID) Long userId,
+    public ResponseEntity<Object> addItem(@RequestHeader(CustomHeaders.X_SHARER_USER_ID) Long userId,
                                           @Valid @RequestBody ItemRequestDto itemRequestDto) {
         log.info("Creating new item: {}", itemRequestDto);
         return itemClient.addItem(userId, itemRequestDto);
@@ -47,8 +47,8 @@ public class ItemController {
 
     @GetMapping
     public ResponseEntity<Object> getAllItemsByOwner(@RequestHeader(CustomHeaders.X_SHARER_USER_ID) Long userId,
-                                                     @RequestParam(defaultValue = "0") Integer from,
-                                                     @RequestParam(defaultValue = "10") Integer size) {
+                                                     @PositiveOrZero @RequestParam(defaultValue = "0") Integer from,
+                                                     @Positive @RequestParam(defaultValue = "10") Integer size) {
         log.info("Getting items by owner");
         return itemClient.getAllItemsByOwner(userId, from, size);
     }

@@ -16,7 +16,6 @@ import ru.practicum.shareit.item.dto.ItemRequestDto;
 import ru.practicum.shareit.item.dto.ItemUpdateDto;
 import ru.practicum.shareit.user.dto.UserNewDto;
 
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -43,7 +42,7 @@ class ItemControllerTest {
         itemRequestDto.setName("item");
         itemRequestDto.setDescription("description");
         itemRequestDto.setAvailable(true);
-        when(itemClient.addItem(anyLong(), any(ItemRequestDto.class)))
+        when(itemClient.addItem(1L, itemRequestDto))
                 .thenReturn(new ResponseEntity<>(itemRequestDto, HttpStatus.OK));
 
         // then
@@ -72,7 +71,11 @@ class ItemControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .header("X-Sharer-User-Id", 1)
                                 .content(objectMapper.writeValueAsString(itemRequestDto)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("400"))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Неправильно составлен запрос. " +
+                        "Поле: \"name\" Причина: \"must not be blank\""));
     }
 
     @SneakyThrows
@@ -90,7 +93,11 @@ class ItemControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .header("X-Sharer-User-Id", 1)
                                 .content(objectMapper.writeValueAsString(itemRequestDto)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("400"))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Неправильно составлен запрос. " +
+                        "Поле: \"description\" Причина: \"must not be blank\""));
     }
 
     @Test
@@ -107,7 +114,11 @@ class ItemControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .header("X-Sharer-User-Id", 1)
                                 .content(objectMapper.writeValueAsString(itemRequestDto)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("400"))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Неправильно составлен запрос. " +
+                        "Поле: \"available\" Причина: \"must not be null\""));
     }
 
     @SneakyThrows
@@ -117,7 +128,8 @@ class ItemControllerTest {
         ItemUpdateDto itemUpdateDto = new ItemUpdateDto();
         itemUpdateDto.setName("item");
         itemUpdateDto.setDescription("description");
-        when(itemClient.updateItem(anyLong(), anyLong(), any(ItemUpdateDto.class))).thenReturn(new ResponseEntity<>(itemUpdateDto, HttpStatus.OK));
+        when(itemClient.updateItem(1L, 1L, itemUpdateDto))
+                .thenReturn(new ResponseEntity<>(itemUpdateDto, HttpStatus.OK));
 
         // then
         mockMvc.perform(
@@ -137,7 +149,8 @@ class ItemControllerTest {
         ItemUpdateDto itemUpdateDto = new ItemUpdateDto();
         itemUpdateDto.setName("item");
         itemUpdateDto.setDescription("description");
-        when(itemClient.getItem(anyLong(), anyLong())).thenReturn(new ResponseEntity<>(itemUpdateDto, HttpStatus.OK));
+        when(itemClient.getItem(1L, 1L))
+                .thenReturn(new ResponseEntity<>(itemUpdateDto, HttpStatus.OK));
 
         // then
         mockMvc.perform(
@@ -155,7 +168,8 @@ class ItemControllerTest {
         // given
         CommentRequestDto commentRequestDto = new CommentRequestDto();
         commentRequestDto.setText("comment");
-        when(itemClient.addComment(anyLong(), anyLong(), any(CommentRequestDto.class))).thenReturn(new ResponseEntity<>(commentRequestDto, HttpStatus.OK));
+        when(itemClient.addComment(1L, 1L, commentRequestDto))
+                .thenReturn(new ResponseEntity<>(commentRequestDto, HttpStatus.OK));
 
         // then
         mockMvc.perform(
@@ -182,14 +196,24 @@ class ItemControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .header("X-Sharer-User-Id", 1)
                                 .content(objectMapper.writeValueAsString(commentRequestDto)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("400"))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Неправильно составлен запрос. " +
+                        "Поле: \"text\" Причина: \"must not be blank\""));
     }
 
     @SneakyThrows
     @Test
     void getAllItemsByOwner_IsValid_ReturnsResponseEntity() {
         // given
-        when(itemClient.getAllItemsByOwner(anyLong(), anyInt(), anyInt())).thenReturn(new ResponseEntity<>(HttpStatus.OK));
+        ItemRequestDto itemRequestDto = new ItemRequestDto();
+        itemRequestDto.setName("name");
+        itemRequestDto.setDescription("description");
+        itemRequestDto.setAvailable(true);
+
+        when(itemClient.getAllItemsByOwner(1L, 0, 10))
+                .thenReturn(new ResponseEntity<>(itemRequestDto, HttpStatus.OK));
 
         // then
         mockMvc.perform(
@@ -198,7 +222,10 @@ class ItemControllerTest {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .param("from", "0")
                                 .param("size", "10"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("name"))
+                .andExpect(jsonPath("$.description").value("description"))
+                .andExpect(jsonPath("$.available").value("true"));
     }
 
     @SneakyThrows
@@ -208,32 +235,54 @@ class ItemControllerTest {
         mockMvc.perform(
                         get("/items")
                                 .contentType(MediaType.APPLICATION_JSON)
+                                .header("X-SHARER-USER-ID", "1")
                                 .param("from", String.valueOf(-1))
                                 .param("size", String.valueOf(10)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("400"))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Неправильно составлен запрос. " +
+                        "Поле: \"getAllItemsByOwner.from\" " +
+                        "Причина: \"must be greater than or equal to 0\""));
 
         mockMvc.perform(
                         get("/items")
                                 .contentType(MediaType.APPLICATION_JSON)
+                                .header("X-SHARER-USER-ID", "1")
                                 .param("from", String.valueOf(0))
                                 .param("size", String.valueOf(0)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("400"))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Неправильно составлен запрос. " +
+                        "Поле: \"getAllItemsByOwner.size\" " +
+                        "Причина: \"must be greater than 0\""));
     }
 
     @SneakyThrows
     @Test
     void searchItem_IsValid_ReturnsResponseEntity() {
         // given
-        when(itemClient.searchAvailableItem(anyString(), anyInt(), anyInt())).thenReturn(new ResponseEntity<>(HttpStatus.OK));
+        ItemRequestDto itemRequestDto = new ItemRequestDto();
+        itemRequestDto.setName("name");
+        itemRequestDto.setDescription("item");
+        itemRequestDto.setAvailable(true);
+
+        when(itemClient.searchAvailableItem("iTe", 0, 10))
+                .thenReturn(new ResponseEntity<>(itemRequestDto, HttpStatus.OK));
 
         // then
         mockMvc.perform(
                         get("/items/search")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .param("text", "item")
+                                .header("X-SHARER-USER-ID", "1")
+                                .param("text", "iTe")
                                 .param("from", "0")
                                 .param("size", "10"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("name"))
+                .andExpect(jsonPath("$.description").value("item"))
+                .andExpect(jsonPath("$.available").value("true"));
     }
 
     @SneakyThrows
@@ -243,17 +292,29 @@ class ItemControllerTest {
         mockMvc.perform(
                         get("/items/search")
                                 .contentType(MediaType.APPLICATION_JSON)
+                                .header("X-SHARER-USER-ID", "1")
                                 .param("text", "text")
                                 .param("from", String.valueOf(-1))
                                 .param("size", String.valueOf(10)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("400"))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Неправильно составлен запрос. " +
+                        "Поле: \"searchItem.from\" " +
+                        "Причина: \"must be greater than or equal to 0\""));
 
         mockMvc.perform(
                         get("/items/search")
                                 .contentType(MediaType.APPLICATION_JSON)
+                                .header("X-SHARER-USER-ID", "1")
                                 .param("text", "text")
                                 .param("from", String.valueOf(0))
                                 .param("size", String.valueOf(0)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value("400"))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Неправильно составлен запрос. " +
+                        "Поле: \"searchItem.size\" " +
+                        "Причина: \"must be greater than 0\""));
     }
 }
